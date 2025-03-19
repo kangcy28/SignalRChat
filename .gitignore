@@ -1,72 +1,47 @@
-# 操作系统生成的文件
-.DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
-Thumbs.db
+# .NET 編譯輸出
+bin/
+obj/
 
-# 日志文件
-*.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-
-# 依赖目录
-node_modules/
-jspm_packages/
-bower_components/
-
-# 构建目录
-dist/
-build/
-out/
-.next/
-
-# 环境文件
-.env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
-
-# IDE 和编辑器文件
-.idea/
-.vscode/
-*.sublime-project
-*.sublime-workspace
+# Visual Studio 文件
+.vs/
+*.user
+*.userosscache
 *.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
+*.userprefs
+*.cache
+*.vspscc
+*.vssscc
 
-# 编译的输出文件
-*.com
-*.class
-*.dll
-*.exe
-*.o
-*.so
+# Visual Studio Code 文件
+.vscode/
 
-# 包文件
-*.7z
-*.dmg
-*.gz
-*.iso
-*.jar
-*.rar
-*.tar
-*.zip
+# ReSharper 文件
+_ReSharper*/
+*.[Rr]e[Ss]harper
+*.DotSettings.user
 
-# 缓存目录
-.cache/
-.temp/
-.tmp/
+# 測試結果
+[Tt]est[Rr]esult*/
+[Bb]uild[Ll]og.*
 
-# 覆盖率报告
-coverage/
+# NuGet 包
+*.nupkg
+# NuGet Symbol 包
+*.snupkg
+# NuGet 包文件夾
+**/[Pp]ackages/*
+# 除非你想要檢查 NuGet 包復原
+!**/[Pp]ackages/build/
+# 在版本控制中忽略 project.json 生成的部分
+artifacts/
 
-# 本地历史
-.history/
+# .NET Core
+project.lock.json
+project.fragment.lock.json
+artifacts/
+
+# StyleCop
+StyleCopReport.xml
+
+# 日誌文件
+*.log
