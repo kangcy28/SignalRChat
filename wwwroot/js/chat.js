@@ -287,28 +287,54 @@ function updateAvailableGroupsList(groups) {
         // 群組加入/離開按鈕
         const groupJoinButton = document.createElement("button");
         groupJoinButton.className = "btn btn-sm";
+        groupJoinButton.dataset.group = group.name; // 新增: 添加 data-group 屬性
         
         if (group.isJoined) {
             groupJoinButton.className += " btn-secondary";
             groupJoinButton.innerHTML = '<i class="fas fa-check"></i> 已加入';
-            groupJoinButton.disabled = group.name === "General"; // 不能離開 General 群組
+            groupJoinButton.disabled = group.name === "General"; // Can't leave General group
             
             groupJoinButton.addEventListener("click", function() {
                 if (group.name !== "General") {
-                    connection.invoke("LeaveGroup", group.name)
+                    // 立即更新按鈕外觀，提供即時反饋
+                    if (!group.isJoined) {
+                        // 如果正在加入群組
+                        this.innerHTML = '<i class="fas fa-check"></i> 已加入';
+                        this.className = "btn btn-sm btn-secondary";
+                        group.isJoined = true;
+                    } else {
+                        // 如果正在離開群組
+                        this.innerHTML = '<i class="fas fa-plus"></i> 加入';
+                        this.className = "btn btn-sm btn-primary";
+                        group.isJoined = false;
+                    }
+                    
+                    // 執行對應的服務器操作
+                    const action = group.isJoined ? "JoinGroup" : "LeaveGroup";
+                    connection.invoke(action, group.name)
                         .catch(function (err) {
-                            console.error("離開群組時出錯:", err.toString());
+                            console.error(action + "群組時出錯:", err.toString());
+                            // 如果發生錯誤，恢復按鈕原狀
+                            group.isJoined = !group.isJoined;
+                            updateAvailableGroupsList([group]); // 只更新這一個群組的按鈕
                         });
                 }
             });
-        } else {
+        }else {
             groupJoinButton.className += " btn-primary";
             groupJoinButton.innerHTML = '<i class="fas fa-plus"></i> 加入';
             
             groupJoinButton.addEventListener("click", function() {
+                // Update button appearance immediately for better UX
+                this.innerHTML = '<i class="fas fa-check"></i> 已加入';
+                this.className = "btn btn-sm btn-secondary";
+                
                 connection.invoke("JoinGroup", group.name)
                     .catch(function (err) {
                         console.error("加入群組時出錯:", err.toString());
+                        // Revert button state if failed
+                        groupJoinButton.innerHTML = '<i class="fas fa-plus"></i> 加入';
+                        groupJoinButton.className = "btn btn-sm btn-primary";
                     });
             });
         }
@@ -469,6 +495,13 @@ connection.on("JoinedGroup", function (groupName) {
     // 如果是首次加入該群組，切換到該群組
     if (groupName !== "General" && !document.querySelector(`.chat-tab[data-group="${groupName}"]`)) {
         switchActiveGroup(groupName);
+    }
+    // 新增: 更新可用群組列表中的按鈕狀態
+    const groupItem = document.querySelector(`#availableGroupsList li button[data-group="${groupName}"]`);
+    if (groupItem) {
+        groupItem.innerHTML = '<i class="fas fa-check"></i> 已加入';
+        groupItem.className = "btn btn-sm btn-secondary";
+        groupItem.disabled = groupName === "General"; // 不能離開 General 群組
     }
 });
 
