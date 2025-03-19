@@ -24,3 +24,4 @@ C:\Users\bert_kang\Documents\exercise\SignalRChat\obj\Debug\net8.0\refint\Signal
 C:\Users\bert_kang\Documents\exercise\SignalRChat\obj\Debug\net8.0\SignalRChat.pdb
 C:\Users\bert_kang\Documents\exercise\SignalRChat\obj\Debug\net8.0\SignalRChat.genruntimeconfig.cache
 C:\Users\bert_kang\Documents\exercise\SignalRChat\obj\Debug\net8.0\ref\SignalRChat.dll
+C:\Users\bert_kang\Documents\exercise\SignalRChat\obj\Debug\net8.0\SignalRChat.sourcelink.json
