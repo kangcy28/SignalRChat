@@ -304,7 +304,8 @@ class ChatStateManager {
       this.updateState(`messages.lastMessageTimestamp.${targetGroup}`, new Date());
       
       // 如果不是當前活動群組且窗口沒有焦點，增加未讀消息計數
-      if (targetGroup !== this.state.user.activeGroup || !this.state.system.windowFocused) {
+      if (message.user !== this.state.user.username && 
+        (targetGroup !== this.state.user.activeGroup || !this.state.system.windowFocused)) {
         const currentCount = this.state.messages.unreadCount[targetGroup] || 0;
         this.updateState(`messages.unreadCount.${targetGroup}`, currentCount + 1);
       }

@@ -331,7 +331,7 @@ class DOMManager {
       messagesList.scrollTop = messagesList.scrollHeight;
       
       // 如果不是當前活動群組，在標籤頁上添加未讀標記
-      if (groupName !== window.activeGroup) {
+      if (!isSelf && groupName !== window.activeGroup) {
         const groupTab = document.querySelector(`.chat-tab[data-group="${groupName}"]`);
         if (groupTab && !groupTab.classList.contains("unread")) {
           groupTab.classList.add("unread");
