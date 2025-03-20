@@ -1,0 +1,210 @@
+/**
+ * 按鈕組件樣式
+ * 包含所有按鈕類型和交互效果
+ */
+
+/* 基本按鈕 */
+button {
+    cursor: pointer;
+    font-family: inherit;
+  }
+  
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+    font-weight: 500;
+    border-radius: 0.35rem;
+    transition: all var(--transition-speed);
+    border: none;
+    position: relative;
+    overflow: hidden;
+  }
+  
+  /* 按鈕變體 */
+  .btn-primary {
+    background-color: var(--primary-color);
+    color: white;
+  }
+  
+  .btn-primary:hover {
+    background-color: var(--primary-dark);
+  }
+  
+  .btn-secondary {
+    background-color: #e2e8f0;
+    color: #334155;
+  }
+  
+  .btn-secondary:hover {
+    background-color: #cbd5e1;
+  }
+  
+  .btn-success {
+    background-color: var(--success-color);
+    color: white;
+  }
+  
+  .btn-success:hover {
+    background-color: #059669;
+  }
+  
+  .btn-danger {
+    background-color: var(--danger-color);
+    color: white;
+  }
+  
+  .btn-danger:hover {
+    background-color: #dc2626;
+  }
+  
+  .btn-light {
+    background-color: var(--light-color);
+    color: #334155;
+    border: 1px solid #e2e8f0;
+  }
+  
+  .btn-light:hover {
+    background-color: #f1f5f9;
+  }
+  
+  /* 按鈕尺寸 */
+  .btn-sm {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.75rem;
+  }
+  
+  .btn-lg {
+    padding: 0.75rem 1.5rem;
+    font-size: 1rem;
+  }
+  
+  /* 禁用狀態 */
+  .btn:disabled {
+    opacity: 0.65;
+    cursor: not-allowed;
+  }
+  
+  /* 發送按鈕 */
+  #sendButton {
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    padding: 0.75rem 1.25rem;
+    cursor: pointer;
+    transition: all var(--transition-speed);
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  #sendButton:hover {
+    background-color: var(--primary-dark);
+  }
+  
+  #sendButton:active {
+    transform: scale(0.98);
+  }
+  
+  #sendButton:disabled {
+    background-color: #cbd5e1;
+    cursor: not-allowed;
+  }
+  
+  #sendButton i {
+    transition: transform var(--transition-speed);
+  }
+  
+  #sendButton:hover i {
+    transform: translateX(2px);
+  }
+  
+  /* 添加群組按鈕 */
+  #showGroupsBtn {
+    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--primary-color);
+    border: none;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    transition: all var(--transition-speed);
+  }
+  
+  #showGroupsBtn:hover {
+    transform: translateY(-1px);
+    background-color: var(--primary-dark);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+  }
+  
+  /* 關閉按鈕 */
+  .btn-close {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    line-height: 1;
+    padding: 0;
+    cursor: pointer;
+    color: #64748b;
+    transition: color var(--transition-speed);
+  }
+  
+  .btn-close:hover {
+    color: var(--dark-color);
+  }
+  
+  /* 重試按鈕 */
+  .retry-button {
+    background-color: var(--error-color);
+    color: white;
+    border: none;
+    border-radius: 0.25rem;
+    padding: 0.2rem 0.5rem;
+    font-size: 0.75rem;
+    cursor: pointer;
+    transition: background-color 0.2s;
+  }
+  
+  .retry-button:hover {
+    background-color: #c82333;
+  }
+  
+  /* 波紋效果 */
+  .btn::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 5px;
+    height: 5px;
+    background: rgba(255, 255, 255, 0.5);
+    opacity: 0;
+    border-radius: 100%;
+    transform: scale(1, 1) translate(-50%, -50%);
+    transform-origin: 50% 50%;
+  }
+  
+  .btn:focus:not(:active)::after {
+    animation: ripple 1s ease-out;
+  }
+  
+  @keyframes ripple {
+    0% {
+      transform: scale(0, 0);
+      opacity: 0.5;
+    }
+    20% {
+      transform: scale(25, 25);
+      opacity: 0.5;
+    }
+    100% {
+      opacity: 0;
+      transform: scale(40, 40);
+    }
+  }

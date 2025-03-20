@@ -1,0 +1,30 @@
+/* 
+ * SignalR聊天應用程式的主CSS檔案
+ * 此檔案負責匯入所有其他CSS模組
+ */
+
+/* 首先匯入變數和基礎樣式 */
+@import 'variables.css';
+@import 'base.css';
+@import 'layout.css';
+
+/* 匯入組件樣式 */
+@import 'components/header.css';
+@import 'components/message.css';
+@import 'components/sidebar.css';
+@import 'components/buttons.css';
+@import 'components/input.css';
+@import 'components/modal.css';
+@import 'components/tabs.css';
+@import 'components/userlist.css';
+@import 'components/notifications.css';
+
+/* 匯入工具類和特殊功能 */
+@import 'utilities.css';
+@import 'animations.css';
+
+/* 匯入深色模式樣式 */
+@import 'dark-mode.css';
+
+/* 最後匯入響應式設計樣式，以確保它們具有最高優先級 */
+@import 'responsive.css';

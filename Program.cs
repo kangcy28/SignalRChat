@@ -3,8 +3,10 @@ using SignalRChat.Hubs;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-builder.Services.AddSignalR();
-
+builder.Services.AddSignalR(options =>
+{
+});
+builder.Services.AddScoped<GlobalMessageFilter>();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

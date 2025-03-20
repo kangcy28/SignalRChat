@@ -1,0 +1,45 @@
+/**
+ * 變數定義
+ * 包含所有顏色、尺寸和其他CSS變數
+ */
+
+ :root {
+    /* 顏色系統 */
+    --primary-color: #4f46e5;
+    --primary-dark: #3730a3;
+    --primary-light: #818cf8;
+    --secondary-color: #f9fafb;
+    --success-color: #10b981;
+    --info-color: #0ea5e9;
+    --warning-color: #f59e0b;
+    --danger-color: #ef4444;
+    --light-color: #f9fafb;
+    --dark-color: #111827;
+    
+    /* 消息相關顏色 */
+    --message-bg: #f3f4f6;
+    --self-message-bg: #ede9fe;
+    
+    /* 邊框和陰影 */
+    --border-radius: 0.5rem;
+    --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    --border-color: #e5e7eb;
+    
+    /* 側邊欄寬度 */
+    --sidebar-width: 250px;
+    
+    /* 動畫和過渡 */
+    --transition-speed: 0.3s;
+    
+    /* 文字和間距 */
+    --chat-font-size: 14px;
+    
+    /* 狀態顏色 */
+    --error-color: #dc3545;
+    --warning-color: #ffc107;
+    --info-light-color: #cff4fc;
+    --pending-color: #6c757d;
+    
+    /* Z-index層級 */
+    --modal-z-index: 2000;
+  }

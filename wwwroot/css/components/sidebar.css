@@ -1,0 +1,206 @@
+/**
+ * 側邊欄樣式
+ * 包含群組列表和用戶列表側邊欄的樣式
+ */
+
+/* 群組側邊欄 */
+.groups-sidebar {
+    width: var(--sidebar-width);
+    background-color: #f8fafc;
+    border-right: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+    transition: width var(--transition-speed);
+  }
+  
+  .groups-header {
+    padding: 1rem;
+    background-color: #f1f5f9;
+    border-bottom: 1px solid var(--border-color);
+    font-weight: 700;
+    color: var(--dark-color);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  
+  .groups-header span {
+    font-size: 0.95rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #64748b;
+  }
+  
+  .groups-list {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    overflow-y: auto;
+    flex: 1;
+  }
+  
+  .groups-list li {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    transition: all var(--transition-speed);
+  }
+  
+  .groups-list li:hover {
+    background-color: #f1f5f9;
+  }
+  
+  .groups-list li.active {
+    background-color: var(--primary-light);
+    color: white;
+    position: relative;
+  }
+  
+  .groups-list li.active::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    background-color: var(--primary-color);
+  }
+  
+  .group-name {
+    display: flex;
+    align-items: center;
+    font-weight: 500;
+  }
+  
+  .group-name i {
+    margin-right: 10px;
+    font-size: 0.9rem;
+    width: 16px;
+    text-align: center;
+    color: #64748b;
+  }
+  
+  .groups-list li.active .group-name i {
+    color: white;
+  }
+  
+  .group-actions {
+    display: flex;
+    align-items: center;
+  }
+  
+  .group-actions button {
+    background: none;
+    border: none;
+    color: inherit;
+    font-size: 0.85rem;
+    padding: 4px;
+    cursor: pointer;
+    opacity: 0.7;
+    transition: opacity var(--transition-speed);
+  }
+  
+  .group-actions button:hover {
+    opacity: 1;
+  }
+  
+  /* 用戶列表側邊欄 */
+  .user-list-container {
+    width: var(--sidebar-width);
+    background-color: #f8fafc;
+    border-left: 1px solid var(--border-color);
+  }
+  
+  .user-list-header {
+    padding: 1rem;
+    background-color: #f1f5f9;
+    border-bottom: 1px solid var(--border-color);
+    font-weight: 700;
+    color: var(--dark-color);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  
+  .user-list-header span {
+    font-size: 0.95rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #64748b;
+  }
+  
+  .users-count {
+    background-color: var(--primary-color);
+    color: white;
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 0.2rem 0.6rem;
+    border-radius: 2rem;
+    min-width: 1.5rem;
+    text-align: center;
+    transition: all var(--transition-speed);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  }
+  
+  #userList {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    overflow-y: auto;
+    max-height: calc(75vh - 53px);
+  }
+  
+  #userList li {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    transition: background-color var(--transition-speed);
+  }
+  
+  #userList li:hover {
+    background-color: #f1f5f9;
+  }
+  
+  .user-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background-color: var(--primary-color);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 0.75rem;
+    font-weight: 600;
+    font-size: 1rem;
+    flex-shrink: 0;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    text-transform: uppercase;
+  }
+  
+  /* 用戶狀態指示器 */
+  .user-status {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    border: 2px solid white;
+  }
+  
+  .status-online {
+    background-color: var(--success-color);
+  }
+  
+  .status-away {
+    background-color: var(--warning-color);
+  }
+  
+  .status-offline {
+    background-color: #94a3b8;
+  }

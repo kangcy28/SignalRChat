@@ -1,0 +1,77 @@
+/**
+ * 布局樣式
+ * 包含整體頁面結構和容器的樣式
+ */
+
+/* 應用容器 */
+.app-container {
+    max-width: 1400px;
+    margin: 2rem auto;
+    box-shadow: var(--shadow);
+    border-radius: var(--border-radius);
+    overflow: hidden;
+    background-color: white;
+    position: relative;
+  }
+  
+  /* 聊天主容器 */
+  .chat-container {
+    display: flex;
+    background-color: white;
+    position: relative;
+  }
+  
+  /* 聊天窗口 */
+  .chat-window {
+    flex: 3;
+    display: flex;
+    flex-direction: column;
+    min-height: 75vh;
+    max-height: 75vh;
+  }
+  
+  /* 消息區域 */
+  .messages-container {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1.25rem;
+    background-color: white;
+    scroll-behavior: smooth;
+  }
+  
+  /* 時間分隔器 */
+  .time-divider {
+    display: flex;
+    align-items: center;
+    margin: 1.5rem 0;
+    color: #94a3b8;
+    font-size: 0.8rem;
+  }
+  
+  .time-divider::before,
+  .time-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background-color: #e2e8f0;
+  }
+  
+  .time-divider::before {
+    margin-right: 0.5rem;
+  }
+  
+  .time-divider::after {
+    margin-left: 0.5rem;
+  }
+  
+  /* 應用頁腳 */
+  .app-footer {
+    padding: 1rem;
+    text-align: center;
+    font-size: 0.8rem;
+    color: #94a3b8;
+    background-color: #f8fafc;
+    border-top: 1px solid var(--border-color);
+    border-bottom-left-radius: var(--border-radius);
+    border-bottom-right-radius: var(--border-radius);
+  }

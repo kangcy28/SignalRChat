@@ -23,36 +23,58 @@ namespace SignalRChat.Hubs
             { "Technical", "技術討論群組" },
             { "Random", "隨意聊天群組" }
         };
+        private readonly GlobalMessageFilter _messageFilter;
 
+        // 通過依賴注入提供過濾器
+        public ChatHub(GlobalMessageFilter messageFilter)
+        {
+            _messageFilter = messageFilter;
+        }
         // 發送消息方法
         public async Task SendMessage(string user, string message)
         {
-            // 記錄用戶名（只有在首次連接或用戶名變更時）
-            string connectionId = Context.ConnectionId;
-            bool shouldUpdateUsersList = false;
-
-            if (!ConnectedUsers.ContainsKey(connectionId))
+            try 
             {
-                // 新用戶連接，添加到字典
-                ConnectedUsers[connectionId] = user;
-                shouldUpdateUsersList = true;
-            }
-            else if (ConnectedUsers[connectionId] != user)
-            {
-                // 用戶名變更，更新字典
-                ConnectedUsers[connectionId] = user;
-                shouldUpdateUsersList = true;
-            }
+                // 先進行消息驗證
+                bool isValidMessage = await _messageFilter.InterceptMessage(user, message, nameof(SendMessage));
+                // 記錄用戶名（只有在首次連接或用戶名變更時）
+                string connectionId = Context.ConnectionId;
+                bool shouldUpdateUsersList = false;
 
-            // 只有在需要時才通知所有用戶更新用戶列表
-            if (shouldUpdateUsersList)
-            {
-                // 通知所有用戶更新用戶列表
-                await SendConnectedUsersList();
-            }
+                if (!ConnectedUsers.ContainsKey(connectionId))
+                {
+                    ConnectedUsers[connectionId] = user;
+                    shouldUpdateUsersList = true;
+                }
+                else if (ConnectedUsers[connectionId] != user)
+                {
+                    ConnectedUsers[connectionId] = user;
+                    shouldUpdateUsersList = true;
+                }
 
-            // 使用強類型調用客戶端方法
-            await Clients.All.ReceiveMessage(user, message);
+                // 只有在需要時才通知所有用戶更新用戶列表
+                if (shouldUpdateUsersList)
+                {
+                    await SendConnectedUsersList();
+                }
+
+                // 使用強類型調用客戶端方法
+                if (isValidMessage)
+                {
+                    // 原有的發送邏輯
+                    await Clients.All.ReceiveMessage(user, message);
+                }
+                else
+                {
+                    // 發送錯誤通知
+                    await Clients.Caller.GroupError("消息未能通過安全檢查");
+                }
+            }
+            catch (HubException ex)
+            {
+                // 將驗證錯誤發送給發送者
+                await Clients.Caller.GroupError(ex.Message);
+            }
         }
 
         /// <summary>
@@ -86,24 +108,47 @@ namespace SignalRChat.Hubs
         // 發送群組消息方法
         public async Task SendGroupMessage(string user, string groupName, string message)
         {
-            string connectionId = Context.ConnectionId;
-            // 確保用戶在嘗試發送的群組中
-            bool isInGroup = false;
+            try 
+            {
+                Console.WriteLine("wow");
+                // 先進行消息驗證
+                bool isValidMessage = await _messageFilter.InterceptMessage(
+            user, message, nameof(SendMessage));
+                Console.WriteLine(message);
+                string connectionId = Context.ConnectionId;
+                // 確保用戶在嘗試發送的群組中
+                bool isInGroup = false;
 
-            if (UserGroups.ContainsKey(connectionId))
-            {
-                isInGroup = UserGroups[connectionId].Contains(groupName);
-            }
+                if (UserGroups.ContainsKey(connectionId))
+                {
+                    isInGroup = UserGroups[connectionId].Contains(groupName);
+                }
 
-            if (isInGroup)
-            {
-                // 使用強類型調用客戶端方法
-                await Clients.Group(groupName).ReceiveGroupMessage(user, groupName, message);
+                if (isInGroup)
+                {
+                    // 使用強類型調用客戶端方法
+                    
+                    if (isValidMessage)
+                    {
+                        // 原有的發送邏輯
+                        await Clients.Group(groupName).ReceiveGroupMessage(user, groupName, message);
+                    }
+                    else
+                    {
+                        // 發送錯誤通知
+                        await Clients.Caller.GroupError("消息未能通過安全檢查");
+                    }
+                }
+                else
+                {
+                    // 通知用戶他不在群組中
+                    await Clients.Caller.GroupError($"您不是群組 '{groupName}' 的成員，無法發送消息。");
+                }
             }
-            else
+            catch (HubException ex)
             {
-                // 通知用戶他不在群組中
-                await Clients.Caller.GroupError($"您不是群組 '{groupName}' 的成員，無法發送消息。");
+                // 將驗證錯誤發送給發送者
+                await Clients.Caller.GroupError(ex.Message);
             }
         }
 
