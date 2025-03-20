@@ -187,7 +187,7 @@ namespace SignalRChat.Hubs
         }
 
         // 當用戶斷開連接時
-        public override async Task OnDisconnectedAsync(Exception exception)
+        public override async Task OnDisconnectedAsync(Exception? exception)
         {
             string connectionId = Context.ConnectionId;
             string username = null;
