@@ -1,0 +1,371 @@
+/**
+ * 響應式設計樣式
+ * 根據不同螢幕尺寸調整布局和元素大小
+ */
+
+/* 大型桌面顯示器 (1200px 以上) */
+@media (min-width: 1200px) {
+    :root {
+      --sidebar-width: 250px;
+    }
+    
+    .app-container {
+      max-width: 1400px;
+      margin: 2rem auto;
+    }
+    
+    /* 增加對大型螢幕的可讀性優化 */
+    .messages-list li {
+      max-width: 70%;
+    }
+  }
+  
+  /* 普通桌面顯示器 (992px - 1199px) */
+  @media (max-width: 1199px) {
+    :root {
+      --sidebar-width: 220px;
+    }
+    
+    .app-container {
+      margin: 1rem;
+    }
+    
+    /* 縮小邊距 */
+    .groups-header,
+    .user-list-header {
+      padding: 0.75rem;
+    }
+    
+    .messages-list li {
+      max-width: 75%;
+    }
+  }
+  
+  /* 平板電腦 (768px - 991px) */
+  @media (max-width: 991px) {
+    :root {
+      --sidebar-width: 200px;
+    }
+    
+    /* 進一步縮小元素間距 */
+    .app-header {
+      padding: 1rem;
+    }
+    
+    .app-header h2 {
+      font-size: 1.5rem;
+    }
+    
+    .groups-list li,
+    #userList li {
+      padding: 0.5rem 0.75rem;
+    }
+    
+    .messages-container {
+      padding: 1rem;
+    }
+    
+    /* 調整消息和輸入框大小 */
+    .message-input-container {
+      padding: 0.5rem;
+    }
+    
+    .messages-list li {
+      padding: 0.5rem 0.75rem;
+      margin-bottom: 0.75rem;
+    }
+  }
+  
+  /* 大型手機和小型平板 (576px - 767px) */
+  @media (max-width: 767px) {
+    /* 改為垂直布局 */
+    .chat-container {
+      flex-direction: column;
+    }
+    
+    /* 調整側邊欄寬度 */
+    .groups-sidebar,
+    .user-list-container {
+      width: 100%;
+      max-height: 150px;
+      overflow-y: auto;
+    }
+    
+    /* 將聊天視窗置於頂部 */
+    .chat-window {
+      min-height: 50vh;
+      order: -1;
+    }
+    
+    /* 調整聊天標籤頁滾動 */
+    .chat-tabs {
+      overflow-x: auto;
+      white-space: nowrap;
+      padding-bottom: 0.25rem;
+    }
+    
+    .chat-tab {
+      padding: 0.5rem 0.75rem;
+      font-size: 0.85rem;
+    }
+    
+    /* 用戶輸入調整 */
+    .user-input {
+      flex-wrap: wrap;
+    }
+    
+    .user-input label {
+      margin-bottom: 0.5rem;
+    }
+    
+    .user-input input {
+      width: 100%;
+      margin-bottom: 0.5rem;
+    }
+    
+    /* 隱藏連接狀態 */
+    .connection-status {
+      display: none;
+    }
+    
+    /* 標題調整 */
+    .app-header h2 {
+      font-size: 1.2rem;
+    }
+    
+    /* 模態對話框調整 */
+    .groups-modal-content,
+    .settings-modal-content,
+    .failed-messages-modal-content {
+      width: 95%;
+      max-height: 85vh;
+    }
+    
+    /* 設置項目垂直排列 */
+    .setting-item {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0.5rem;
+    }
+    
+    /* 失敗消息項目調整 */
+    .failed-message-item {
+      padding: 0.75rem;
+    }
+    
+    .failed-message-actions {
+      flex-direction: column;
+      width: 100%;
+    }
+    
+    .failed-message-actions button {
+      width: 100%;
+      margin-top: 0.5rem;
+    }
+  }
+  
+  /* 手機 (575px 以下) */
+  @media (max-width: 575px) {
+    /* 去除 app 容器邊距，實現全屏效果 */
+    .app-container {
+      margin: 0;
+      border-radius: 0;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .app-header {
+      border-radius: 0;
+      padding: 0.75rem;
+    }
+    
+    /* 讓聊天視窗填滿可用空間 */
+    .chat-window {
+      flex: 1;
+    }
+    
+    /* 進一步減少內邊距 */
+    .messages-container {
+      padding: 0.5rem;
+    }
+    
+    /* 輸入區域調整 */
+    .input-area {
+      padding: 0.5rem;
+    }
+    
+    #sendButton {
+      padding: 0.5rem 0.75rem;
+    }
+    
+    /* 消息和系統消息調整 */
+    .messages-list li {
+      max-width: 90%;
+      font-size: 0.9rem;
+      padding: 0.5rem 0.75rem;
+    }
+    
+    .messages-list li.system-message {
+      font-size: 0.8rem;
+    }
+    
+    /* 設置按鈕調整 */
+    #settingsBtn {
+      width: 28px;
+      height: 28px;
+      right: 0.5rem;
+      top: 0.5rem;
+    }
+    
+    /* 改進群組和用戶列表的垂直空間使用 */
+    .groups-sidebar,
+    .user-list-container {
+      max-height: 120px;
+    }
+    
+    /* 群組標籤更緊湊 */
+    .groups-list li,
+    #userList li {
+      padding: 0.4rem 0.6rem;
+    }
+    
+    /* 調整模態對話框 */
+    .groups-modal-header,
+    .settings-modal-header,
+    .failed-messages-modal-header {
+      padding: 0.75rem;
+    }
+    
+    .groups-modal-body,
+    .settings-modal-body,
+    .failed-messages-modal-body {
+      padding: 0.75rem;
+    }
+    
+    /* 側邊欄標題調整 */
+    .groups-header,
+    .user-list-header {
+      padding: 0.5rem;
+      font-size: 0.85rem;
+    }
+    
+    /* 操作按鈕更小 */
+    .group-actions button {
+      font-size: 0.75rem;
+    }
+    
+    /* 調整用戶頭像尺寸 */
+    .user-avatar {
+      width: 30px;
+      height: 30px;
+      font-size: 0.9rem;
+    }
+  }
+  
+  /* 小型手機 (400px 以下) */
+  @media (max-width: 400px) {
+    /* 極簡佈局，最大化消息區域 */
+    .app-header h2 {
+      font-size: 1rem;
+    }
+    
+    .app-header h2 i {
+      margin-right: 0.4rem;
+    }
+    
+    /* 縮小消息文字大小 */
+    :root {
+      --chat-font-size: 13px;
+    }
+    
+    /* 最小化輸入區域 */
+    .message-input-container {
+      font-size: 0.9rem;
+    }
+    
+    .current-group {
+      padding: 0.5rem;
+    }
+    
+    #messageInput {
+      padding: 0.5rem;
+    }
+    
+    #sendButton {
+      padding: 0.5rem;
+    }
+    
+    /* 調整邊距和填充 */
+    .messages-list li {
+      max-width: 95%;
+      margin-bottom: 0.5rem;
+    }
+    
+    /* 隱藏或縮小某些不重要的元素 */
+    .app-footer {
+      padding: 0.5rem;
+      font-size: 0.7rem;
+    }
+  }
+  
+  /* 高度調整 (對於較小螢幕高度) */
+  @media (max-height: 600px) {
+    .app-header {
+      padding: 0.5rem;
+    }
+    
+    .chat-window {
+      min-height: 70vh;
+    }
+    
+    /* 減少側邊欄高度 */
+    .groups-sidebar,
+    .user-list-container {
+      max-height: 100px;
+    }
+    
+    /* 調整模態對話框尺寸 */
+    .groups-modal-body,
+    .settings-modal-body,
+    .failed-messages-modal-body {
+      max-height: 50vh;
+    }
+  }
+  
+  /* 打印樣式 */
+  @media print {
+    .app-container {
+      margin: 0;
+      box-shadow: none;
+    }
+    
+    .groups-sidebar,
+    .user-list-container,
+    .input-area,
+    .app-header,
+    .app-footer,
+    .chat-tabs,
+    #settingsBtn {
+      display: none !important;
+    }
+    
+    .chat-window {
+      border: none;
+    }
+    
+    .messages-container {
+      height: auto;
+      overflow: visible;
+    }
+    
+    .messages-list li {
+      page-break-inside: avoid;
+      border: 1px solid #ccc;
+    }
+    
+    .messages-list li.system-message {
+      color: #666;
+      font-style: italic;
+    }
+  }

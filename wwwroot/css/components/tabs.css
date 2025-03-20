@@ -1,0 +1,112 @@
+/**
+ * 標籤頁組件樣式
+ * 包含聊天標籤頁和群組切換的樣式
+ */
+
+/* 聊天標籤頁容器 */
+.chat-tabs {
+    display: flex;
+    padding: 0;
+    background-color: #f8fafc;
+    border-bottom: 1px solid var(--border-color);
+    overflow-x: auto;
+    scrollbar-width: thin;
+  }
+  
+  .chat-tabs::-webkit-scrollbar {
+    height: 4px;
+  }
+  
+  .chat-tabs::-webkit-scrollbar-thumb {
+    background-color: rgba(0, 0, 0, 0.1);
+    border-radius: 4px;
+  }
+  
+  /* 單個標籤頁 */
+  .chat-tab {
+    padding: 0.75rem 1.25rem;
+    cursor: pointer;
+    border-bottom: 3px solid transparent;
+    white-space: nowrap;
+    transition: all var(--transition-speed);
+    font-size: 0.9rem;
+    color: #64748b;
+    position: relative;
+  }
+  
+  .chat-tab:hover {
+    background-color: #f1f5f9;
+    color: var(--dark-color);
+  }
+  
+  .chat-tab.active {
+    border-bottom-color: var(--primary-color);
+    font-weight: 600;
+    color: var(--primary-color);
+  }
+  
+  /* 未讀消息指示器 */
+  .chat-tab.unread::after {
+    content: '';
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: var(--danger-color);
+  }
+  
+  /* 關閉標籤按鈕 */
+  .chat-tab .close-tab {
+    margin-left: 8px;
+    font-size: 0.8rem;
+    opacity: 0.7;
+  }
+  
+  .chat-tab .close-tab:hover {
+    opacity: 1;
+  }
+  
+  /* 垂直標籤頁 (用於大螢幕側邊欄) */
+  .tabs-vertical {
+    display: flex;
+    flex-direction: column;
+    border-right: 1px solid var(--border-color);
+  }
+  
+  .tabs-vertical .chat-tab {
+    padding: 0.75rem 1rem;
+    border-bottom: none;
+    border-left: 3px solid transparent;
+  }
+  
+  .tabs-vertical .chat-tab.active {
+    border-left-color: var(--primary-color);
+    background-color: #f1f5f9;
+  }
+  
+  /* 標籤頁內容區域 */
+  .tab-content {
+    display: none;
+  }
+  
+  .tab-content.active {
+    display: block;
+    animation: fadeIn 0.3s ease;
+  }
+  
+  /* 標籤頁中的未讀計數徽章 */
+  .chat-tab .unread-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--danger-color);
+    color: white;
+    font-size: 0.7rem;
+    border-radius: 50%;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
+    margin-left: 8px;
+  }

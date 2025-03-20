@@ -1,0 +1,354 @@
+/**
+ * 動畫樣式
+ * 包含所有動畫效果和過渡效果的定義
+ */
+
+/* 淡入效果 */
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  
+  .fade-in {
+    animation: fadeIn 0.3s ease;
+  }
+  
+  /* 淡出效果 */
+  @keyframes fadeOut {
+    from { opacity: 1; }
+    to { opacity: 0; visibility: hidden; }
+  }
+  
+  .fade-out {
+    animation: fadeOut 0.3s ease forwards;
+  }
+  
+  /* 淡入上移 */
+  @keyframes fadeInUp {
+    from { 
+      opacity: 0; 
+      transform: translateY(10px); 
+    }
+    to { 
+      opacity: 1; 
+      transform: translateY(0); 
+    }
+  }
+  
+  .fade-in-up {
+    animation: fadeInUp 0.3s ease;
+  }
+  
+  /* 淡入下移 */
+  @keyframes fadeInDown {
+    from { 
+      opacity: 0; 
+      transform: translateY(-10px); 
+    }
+    to { 
+      opacity: 1; 
+      transform: translateY(0); 
+    }
+  }
+  
+  .fade-in-down {
+    animation: fadeInDown 0.3s ease;
+  }
+  
+  /* 淡入左移 */
+  @keyframes fadeInLeft {
+    from { 
+      opacity: 0; 
+      transform: translateX(-10px); 
+    }
+    to { 
+      opacity: 1; 
+      transform: translateX(0); 
+    }
+  }
+  
+  .fade-in-left {
+    animation: fadeInLeft 0.3s ease;
+  }
+  
+  /* 淡入右移 */
+  @keyframes fadeInRight {
+    from { 
+      opacity: 0; 
+      transform: translateX(10px); 
+    }
+    to { 
+      opacity: 1; 
+      transform: translateX(0); 
+    }
+  }
+  
+  .fade-in-right {
+    animation: fadeInRight 0.3s ease;
+  }
+  
+  /* 彈入效果 */
+  @keyframes bounceIn {
+    0% { 
+      opacity: 0; 
+      transform: scale(0.5); 
+    }
+    50% { 
+      opacity: 1; 
+      transform: scale(1.1); 
+    }
+    70% { 
+      transform: scale(0.95); 
+    }
+    100% { 
+      transform: scale(1); 
+    }
+  }
+  
+  .bounce-in {
+    animation: bounceIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  }
+  
+  /* 脈動效果 */
+  @keyframes pulse {
+    0% { 
+      box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); 
+    }
+    70% { 
+      box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); 
+    }
+    100% { 
+      box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); 
+    }
+  }
+  
+  .pulse {
+    animation: pulse 2s infinite;
+  }
+  
+  /* 閃爍效果 */
+  @keyframes blink {
+    0%, 100% { 
+      opacity: 0.5; 
+    }
+    50% { 
+      opacity: 1; 
+    }
+  }
+  
+  .blink {
+    animation: blink 1.5s infinite;
+  }
+  
+  /* 淡入閃爍 */
+  @keyframes fadePulse {
+    0% { 
+      opacity: 0.8; 
+    }
+    100% { 
+      opacity: 1; 
+    }
+  }
+  
+  .fade-pulse {
+    animation: fadePulse 2s infinite alternate;
+  }
+  
+  /* 旋轉效果 */
+  @keyframes rotate {
+    from { 
+      transform: rotate(0deg); 
+    }
+    to { 
+      transform: rotate(360deg); 
+    }
+  }
+  
+  .rotate {
+    animation: rotate 1.5s linear infinite;
+  }
+  
+  /* 滑入效果 */
+  @keyframes slideIn {
+    from { 
+      transform: translateX(100%); 
+      opacity: 0; 
+    }
+    to { 
+      transform: translateX(0); 
+      opacity: 1; 
+    }
+  }
+  
+  .slide-in {
+    animation: slideIn 0.3s ease;
+  }
+  
+  /* 滑出效果 */
+  @keyframes slideOut {
+    from { 
+      transform: translateX(0); 
+      opacity: 1; 
+    }
+    to { 
+      transform: translateX(100%); 
+      opacity: 0; 
+    }
+  }
+  
+  .slide-out {
+    animation: slideOut 0.3s ease forwards;
+  }
+  
+  /* 晃動效果 */
+  @keyframes shake {
+    0%, 100% { 
+      transform: translateX(0); 
+    }
+    10%, 30%, 50%, 70%, 90% { 
+      transform: translateX(-5px); 
+    }
+    20%, 40%, 60%, 80% { 
+      transform: translateX(5px); 
+    }
+  }
+  
+  .shake {
+    animation: shake 0.8s cubic-bezier(.36,.07,.19,.97) both;
+  }
+  
+  /* 縮放效果 */
+  @keyframes scale {
+    0% { 
+      transform: scale(1); 
+    }
+    50% { 
+      transform: scale(1.1); 
+    }
+    100% { 
+      transform: scale(1); 
+    }
+  }
+  
+  .scale {
+    animation: scale 1.5s ease-in-out infinite;
+  }
+  
+  /* 打字動畫 */
+  @keyframes typingDot {
+    0%, 60%, 100% { 
+      transform: translateY(0); 
+    }
+    30% { 
+      transform: translateY(-5px); 
+    }
+  }
+  
+  .typing-dot:nth-child(1) {
+    animation: typingDot 1.5s infinite ease-in-out;
+  }
+  
+  .typing-dot:nth-child(2) {
+    animation: typingDot 1.5s infinite ease-in-out 0.2s;
+  }
+  
+  .typing-dot:nth-child(3) {
+    animation: typingDot 1.5s infinite ease-in-out 0.4s;
+  }
+  
+  /* 模態框入場動畫 */
+  @keyframes modalIn {
+    from { 
+      opacity: 0; 
+      transform: scale(0.95) translateY(-20px); 
+    }
+    to { 
+      opacity: 1; 
+      transform: scale(1) translateY(0); 
+    }
+  }
+  
+  .modal-in {
+    animation: modalIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  }
+  
+  /* 漣漪效果 */
+  @keyframes ripple {
+    0% {
+      transform: scale(0, 0);
+      opacity: 0.5;
+    }
+    20% {
+      transform: scale(25, 25);
+      opacity: 0.5;
+    }
+    100% {
+      opacity: 0;
+      transform: scale(40, 40);
+    }
+  }
+  
+  /* 閃光效果 */
+  @keyframes shimmer {
+    0% { 
+      background-position: -200% 0; 
+    }
+    100% { 
+      background-position: 200% 0; 
+    }
+  }
+  
+  .shimmer {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite linear;
+  }
+  
+  /* 下拉展開 */
+  @keyframes growDown {
+    0% {
+      transform: scaleY(0);
+    }
+    80% {
+      transform: scaleY(1.1);
+    }
+    100% {
+      transform: scaleY(1);
+    }
+  }
+  
+  .grow-down {
+    transform-origin: top center;
+    animation: growDown 0.3s ease-in-out forwards;
+  }
+  
+  /* CSS 過渡效果 */
+  .transition-all {
+    transition: all var(--transition-speed);
+  }
+  
+  .transition-opacity {
+    transition: opacity var(--transition-speed);
+  }
+  
+  .transition-transform {
+    transition: transform var(--transition-speed);
+  }
+  
+  .transition-colors {
+    transition: color var(--transition-speed), background-color var(--transition-speed), border-color var(--transition-speed);
+  }
+  
+  /* 懸停效果變換 */
+  .hover-scale:hover {
+    transform: scale(1.05);
+  }
+  
+  .hover-elevate:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+  
+  .hover-shadow:hover {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }

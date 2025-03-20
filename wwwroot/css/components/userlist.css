@@ -1,0 +1,211 @@
+/**
+ * 用戶列表組件樣式
+ * 包含用戶列表、用戶項目和狀態顯示的樣式
+ */
+
+/* 用戶列表容器 */
+.user-list-container {
+    width: var(--sidebar-width);
+    background-color: #f8fafc;
+    border-left: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+  }
+  
+  /* 用戶列表標題 */
+  .user-list-header {
+    padding: 1rem;
+    background-color: #f1f5f9;
+    border-bottom: 1px solid var(--border-color);
+    font-weight: 700;
+    color: var(--dark-color);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  
+  .user-list-header span {
+    font-size: 0.95rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #64748b;
+  }
+  
+  /* 在線人數徽章 */
+  .users-count {
+    background-color: var(--primary-color);
+    color: white;
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 0.2rem 0.6rem;
+    border-radius: 2rem;
+    min-width: 1.5rem;
+    text-align: center;
+    transition: all var(--transition-speed);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  }
+  
+  /* 用戶列表 */
+  #userList {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    overflow-y: auto;
+    flex: 1;
+  }
+  
+  /* 用戶列表項 */
+  #userList li {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    transition: background-color var(--transition-speed);
+  }
+  
+  #userList li:hover {
+    background-color: #f1f5f9;
+  }
+  
+  #userList li.current-user {
+    background-color: rgba(79, 70, 229, 0.1);
+    border-left: 3px solid var(--primary-color);
+  }
+  
+  /* 用戶頭像 */
+  .user-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background-color: var(--primary-color);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 0.75rem;
+    font-weight: 600;
+    font-size: 1rem;
+    flex-shrink: 0;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    text-transform: uppercase;
+    position: relative;
+  }
+  
+  /* 用戶狀態指示器 */
+  .user-status {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    border: 2px solid white;
+  }
+  
+  .status-online {
+    background-color: var(--success-color);
+  }
+  
+  .status-away {
+    background-color: var(--warning-color);
+  }
+  
+  .status-offline {
+    background-color: #94a3b8;
+  }
+  
+  /* 用戶信息區域 */
+  .user-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0; /* 確保文本截斷正常工作 */
+  }
+  
+  .user-name {
+    font-weight: 500;
+    color: var(--dark-color);
+    margin-bottom: 0.1rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  
+  .user-status-text {
+    font-size: 0.75rem;
+    color: #64748b;
+  }
+  
+  /* 用戶操作按鈕 */
+  .user-actions {
+    display: flex;
+    align-items: center;
+    margin-left: 0.5rem;
+  }
+  
+  .user-actions button {
+    background: none;
+    border: none;
+    color: #94a3b8;
+    font-size: 0.85rem;
+    padding: 4px;
+    cursor: pointer;
+    transition: color var(--transition-speed);
+  }
+  
+  .user-actions button:hover {
+    color: var(--primary-color);
+  }
+  
+  /* 用戶搜索框 */
+  .user-search {
+    padding: 0.5rem;
+    border-bottom: 1px solid var(--border-color);
+  }
+  
+  .user-search input {
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid #e2e8f0;
+    border-radius: var(--border-radius);
+    font-size: 0.9rem;
+  }
+  
+  .user-search input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.1);
+  }
+  
+  /* 空列表狀態 */
+  .empty-list {
+    padding: 2rem 1rem;
+    text-align: center;
+    color: #64748b;
+    font-style: italic;
+  }
+  
+  /* 用戶類型標籤 */
+  .user-type-tag {
+    font-size: 0.65rem;
+    padding: 0.15rem 0.4rem;
+    border-radius: 0.25rem;
+    margin-left: 0.5rem;
+    font-weight: 600;
+    text-transform: uppercase;
+  }
+  
+  .user-type-admin {
+    background-color: var(--primary-color);
+    color: white;
+  }
+  
+  .user-type-mod {
+    background-color: var(--info-color);
+    color: white;
+  }
+  
+  .user-type-guest {
+    background-color: #e2e8f0;
+    color: #64748b;
+  }
