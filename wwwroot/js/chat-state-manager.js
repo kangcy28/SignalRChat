@@ -1,0 +1,579 @@
+/**
+ * 聊天應用程序狀態管理器
+ * 提供集中式狀態管理，用於追踪連接、用戶和消息狀態
+ */
+class ChatStateManager {
+    // 單例實例
+    static instance = null;
+    
+    /**
+     * 獲取單例實例
+     * @returns {ChatStateManager} 狀態管理器實例
+     */
+    static getInstance() {
+      if (!ChatStateManager.instance) {
+        ChatStateManager.instance = new ChatStateManager();
+      }
+      return ChatStateManager.instance;
+    }
+    
+    /**
+     * 檢查通知權限
+     */
+    checkNotificationPermission() {
+      return 'Notification' in window && Notification.permission === 'granted';
+    }
+    
+    /**
+     * 私有構造函數，防止直接實例化
+     */
+    constructor() {
+      // 初始化默認狀態
+      this.state = {
+        // 連接狀態
+        connection: {
+          isConnected: false,
+          isConnecting: false,
+          reconnectAttempts: 0,
+          lastError: null,
+          serverTime: null,
+          ping: null  // 連接延遲（毫秒）
+        },
+        
+        // 用戶狀態
+        user: {
+          id: null,    // 連接ID
+          username: localStorage.getItem("chatUsername") || "訪客" + Math.floor(Math.random() * 1000),
+          groups: [{ name: "General", description: "一般討論群組" }],
+          activeGroup: "General",
+          isTyping: false,
+          status: "online",
+          lastActivity: new Date()
+        },
+        
+        // 消息狀態
+        messages: {
+          byGroup: { "General": [] },
+          unreadCount: { "General": 0 },
+          lastMessageTimestamp: { "General": null },
+          pendingMessages: [],  // 待發送的消息
+          failedMessages: []    // 發送失敗的消息
+        },
+        
+        // 系統狀態
+        system: {
+          darkMode: window.matchMedia("(prefers-color-scheme: dark)").matches,
+          notificationsEnabled: this.checkNotificationPermission(),
+          soundEnabled: true,
+          language: navigator.language || "zh-TW",
+          fontSize: parseInt(localStorage.getItem("chatFontSize") || "14"),
+          windowFocused: document.hasFocus()
+        }
+      };
+      
+      // 事件監聽器映射
+      this.listeners = new Map();
+      
+      // 設置窗口焦點監聽器
+      window.addEventListener('focus', () => {
+        this.updateState('system.windowFocused', true);
+        // 如果窗口重新獲取焦點，重置當前活動群組未讀消息計數
+        this.updateState(`messages.unreadCount.${this.state.user.activeGroup}`, 0);
+      });
+      
+      window.addEventListener('blur', () => {
+        this.updateState('system.windowFocused', false);
+      });
+      
+      // 初始化狀態持久化
+      this.loadFromLocalStorage();
+    }
+    
+    /**
+     * 獲取狀態樹的特定路徑值
+     * @param {string} path - 狀態路徑 (例如: 'user.username', 'connection.isConnected')
+     * @returns {any} 路徑對應的值
+     */
+    getState(path) {
+      return path.split('.').reduce((obj, key) => 
+        obj && obj[key] !== undefined ? obj[key] : null, this.state);
+    }
+    
+    /**
+     * 獲取整個狀態物件的深拷貝
+     * @returns {Object} 狀態物件的深拷貝
+     */
+    getFullState() {
+      return JSON.parse(JSON.stringify(this.state));
+    }
+    
+    /**
+     * 更新狀態
+     * @param {string} path - 要更新的狀態路徑
+     * @param {any} value - 新值
+     */
+    updateState(path, value) {
+      const pathParts = path.split('.');
+      const lastKey = pathParts.pop();
+      const oldValue = this.getState(path);
+      
+      // 如果值沒有變化，不進行更新
+      if (JSON.stringify(oldValue) === JSON.stringify(value)) {
+        return;
+      }
+      
+      // 找到要更新的對象
+      const target = pathParts.reduce((obj, key) => {
+        if (!obj[key]) {
+          obj[key] = {};
+        }
+        return obj[key];
+      }, this.state);
+      
+      // 更新值
+      target[lastKey] = value;
+      
+      // 觸發相關監聽器
+      this.notifyListeners(path, value, oldValue);
+      
+      // 保存某些狀態到 localStorage
+      this.saveToLocalStorage();
+    }
+    
+    /**
+     * 通知狀態變化的監聽器
+     * @param {string} path - 變化的狀態路徑
+     * @param {any} newValue - 新值
+     * @param {any} oldValue - 舊值
+     */
+    notifyListeners(path, newValue, oldValue) {
+      // 通知完整路徑的監聽器
+      this.getListeners(path).forEach(listener => 
+        listener(newValue, oldValue, path));
+      
+      // 通知父路徑的監聽器
+      const parts = path.split('.');
+      while (parts.length > 1) {
+        parts.pop();
+        const parentPath = parts.join('.');
+        const parentNew = this.getState(parentPath);
+        
+        this.getListeners(parentPath).forEach(listener => 
+          listener(parentNew, parentNew, parentPath));
+      }
+      
+      // 通知所有根級別的變化
+      const rootSegment = path.split('.')[0];
+      this.getListeners(rootSegment).forEach(listener => {
+        const rootNewValue = this.state[rootSegment];
+        listener(rootNewValue, rootNewValue, rootSegment);
+      });
+    }
+    
+    /**
+     * 獲取特定路徑的監聽器
+     * @param {string} path - 狀態路徑
+     * @returns {Array<Function>} 監聽器數組
+     */
+    getListeners(path) {
+      return this.listeners.get(path) || [];
+    }
+    
+    /**
+     * 添加狀態監聽器
+     * @param {string} path - 要監聽的狀態路徑
+     * @param {Function} listener - 監聽回調函數
+     * @returns {Function} 取消監聽的函數
+     */
+    addListener(path, listener) {
+      if (!this.listeners.has(path)) {
+        this.listeners.set(path, []);
+      }
+      
+      this.listeners.get(path).push(listener);
+      
+      // 返回取消監聽的函數
+      return () => {
+        const listeners = this.listeners.get(path);
+        if (listeners) {
+          const index = listeners.indexOf(listener);
+          if (index !== -1) {
+            listeners.splice(index, 1);
+          }
+        }
+      };
+    }
+    
+    /**
+     * 將群組添加到用戶的群組列表
+     * @param {Object} group - 群組信息
+     */
+    addGroup(group) {
+      const groups = [...this.state.user.groups];
+      // 檢查群組是否已存在
+      const existingIndex = groups.findIndex(g => g.name === group.name);
+      
+      if (existingIndex === -1) {
+        groups.push(group);
+        this.updateState('user.groups', groups);
+        
+        // 為新群組初始化消息列表和未讀計數
+        if (!this.state.messages.byGroup[group.name]) {
+          const byGroup = { ...this.state.messages.byGroup };
+          byGroup[group.name] = [];
+          this.updateState('messages.byGroup', byGroup);
+        }
+        
+        if (!this.state.messages.unreadCount[group.name]) {
+          const unreadCount = { ...this.state.messages.unreadCount };
+          unreadCount[group.name] = 0;
+          this.updateState('messages.unreadCount', unreadCount);
+        }
+        
+        if (!this.state.messages.lastMessageTimestamp[group.name]) {
+          const lastMessageTimestamp = { ...this.state.messages.lastMessageTimestamp };
+          lastMessageTimestamp[group.name] = null;
+          this.updateState('messages.lastMessageTimestamp', lastMessageTimestamp);
+        }
+      }
+    }
+    
+    /**
+     * 將群組從用戶的群組列表中移除
+     * @param {string} groupName - 群組名稱
+     */
+    removeGroup(groupName) {
+      // 不允許移除 General 群組
+      if (groupName === "General") {
+        return;
+      }
+      
+      // 更新群組列表
+      const groups = this.state.user.groups.filter(g => g.name !== groupName);
+      this.updateState('user.groups', groups);
+      
+      // 如果當前活動群組被移除，切換到 General
+      if (this.state.user.activeGroup === groupName) {
+        this.updateState('user.activeGroup', "General");
+      }
+      
+      // 清理該群組的未讀計數
+      this.updateState(`messages.unreadCount.${groupName}`, 0);
+    }
+    
+    /**
+     * 設置活動群組
+     * @param {string} groupName - 群組名稱
+     */
+    setActiveGroup(groupName) {
+      // 只有當群組存在於用戶的群組列表中時才能設置為活動
+      if (this.state.user.groups.some(g => g.name === groupName)) {
+        const oldGroup = this.state.user.activeGroup;
+        
+        this.updateState('user.activeGroup', groupName);
+        
+        // 重置新活動群組的未讀消息計數
+        this.updateState(`messages.unreadCount.${groupName}`, 0);
+      }
+    }
+    
+    /**
+     * 添加消息到特定群組
+     * @param {Object} message - 消息對象
+     * @param {string} groupName - 群組名稱
+     */
+    addMessage(message, groupName) {
+      // 如果未指定群組，使用消息的群組或當前活動群組
+      const targetGroup = groupName || message.groupName || this.state.user.activeGroup;
+      
+      // 確保該群組存在於消息列表中
+      if (!this.state.messages.byGroup[targetGroup]) {
+        const byGroup = { ...this.state.messages.byGroup };
+        byGroup[targetGroup] = [];
+        this.updateState('messages.byGroup', byGroup);
+      }
+      
+      // 添加消息
+      const messages = [...(this.state.messages.byGroup[targetGroup] || [])];
+      messages.push({
+        ...message,
+        timestamp: message.timestamp || new Date()
+      });
+      
+      this.updateState(`messages.byGroup.${targetGroup}`, messages);
+      this.updateState(`messages.lastMessageTimestamp.${targetGroup}`, new Date());
+      
+      // 如果不是當前活動群組且窗口沒有焦點，增加未讀消息計數
+      if (targetGroup !== this.state.user.activeGroup || !this.state.system.windowFocused) {
+        const currentCount = this.state.messages.unreadCount[targetGroup] || 0;
+        this.updateState(`messages.unreadCount.${targetGroup}`, currentCount + 1);
+      }
+    }
+    
+    /**
+     * 添加待發送的消息
+     * @param {Object} message - 待發送的消息
+     */
+    addPendingMessage(message) {
+      this.updateState('messages.pendingMessages', [
+        ...this.state.messages.pendingMessages,
+        message
+      ]);
+    }
+    
+    /**
+     * 將消息從待發送移除（發送成功）
+     * @param {string} messageId - 消息ID
+     */
+    removePendingMessage(messageId) {
+      this.updateState('messages.pendingMessages', 
+        this.state.messages.pendingMessages.filter(m => m.timestamp.toString() !== messageId));
+    }
+    
+    /**
+     * 將消息標記為發送失敗
+     * @param {Object} message - 失敗的消息
+     */
+    markMessageAsFailed(message) {
+      // 從待發送列表移除
+      this.updateState('messages.pendingMessages', 
+        this.state.messages.pendingMessages.filter(m => 
+          m.timestamp.toString() !== message.timestamp.toString()));
+      
+      // 添加到失敗列表
+      this.updateState('messages.failedMessages', [
+        ...this.state.messages.failedMessages,
+        message
+      ]);
+    }
+    
+    /**
+     * 更新連接狀態
+     * @param {boolean} isConnected - 是否已連接
+     * @param {boolean} isConnecting - 是否正在連接
+     * @param {string} error - 連接錯誤信息
+     */
+    updateConnectionState(isConnected, isConnecting, error) {
+      this.updateState('connection.isConnected', isConnected);
+      this.updateState('connection.isConnecting', isConnecting);
+      
+      if (error) {
+        this.updateState('connection.lastError', error);
+      }
+      
+      if (!isConnected && !isConnecting) {
+        // 連接斷開時增加重連嘗試次數
+        this.updateState('connection.reconnectAttempts', 
+          this.state.connection.reconnectAttempts + 1);
+      } else if (isConnected) {
+        // 連接成功時重置重連計數
+        this.updateState('connection.reconnectAttempts', 0);
+        this.updateState('connection.lastError', null);
+      }
+    }
+    
+    /**
+     * 更新用戶在線狀態
+     * @param {string} status - 在線狀態
+     */
+    updateUserStatus(status) {
+      this.updateState('user.status', status);
+      this.updateState('user.lastActivity', new Date());
+    }
+    
+    /**
+     * 更新用戶是否正在輸入
+     * @param {boolean} isTyping - 是否正在輸入
+     */
+    updateUserTyping(isTyping) {
+      this.updateState('user.isTyping', isTyping);
+      this.updateState('user.lastActivity', new Date());
+    }
+    
+    /**
+     * 請求推送通知權限
+     * @returns {Promise<boolean>} 是否獲得許可
+     */
+    async requestNotificationPermission() {
+      if (!('Notification' in window)) {
+        return false;
+      }
+      
+      let permission;
+      
+      try {
+        permission = await Notification.requestPermission();
+      } catch (error) {
+        this.updateState('system.notificationsEnabled', false);
+        return false;
+      }
+      
+      const enabled = permission === 'granted';
+      this.updateState('system.notificationsEnabled', enabled);
+      return enabled;
+    }
+    
+    /**
+     * 顯示桌面通知
+     * @param {string} title - 通知標題
+     * @param {NotificationOptions} options - 通知選項
+     */
+    showNotification(title, options) {
+      if (this.state.system.notificationsEnabled && 
+          !this.state.system.windowFocused && 
+          'Notification' in window && 
+          Notification.permission === 'granted') {
+        
+        new Notification(title, options);
+        
+        // 如果啟用了聲音通知，播放提示音
+        if (this.state.system.soundEnabled) {
+          this.playNotificationSound();
+        }
+      }
+    }
+    
+    /**
+     * 播放通知聲音
+     */
+    playNotificationSound() {
+      try {
+        const audio = new Audio('/sounds/notification.mp3');
+        audio.play().catch(() => console.log('無法播放通知聲音'));
+      } catch (error) {
+        console.log('播放通知聲音時出錯:', error);
+      }
+    }
+    
+    /**
+     * 切換夜間模式
+     * @param {boolean} enabled - 是否啟用夜間模式，如果不提供則切換當前狀態
+     */
+    toggleDarkMode(enabled) {
+      const darkMode = enabled !== undefined ? enabled : !this.state.system.darkMode;
+      this.updateState('system.darkMode', darkMode);
+      
+      if (darkMode) {
+        document.body.classList.add('dark-mode');
+      } else {
+        document.body.classList.remove('dark-mode');
+      }
+      
+      localStorage.setItem('chatDarkMode', darkMode ? 'true' : 'false');
+    }
+    
+    /**
+     * 切換聲音通知
+     * @param {boolean} enabled - 是否啟用聲音通知，如果不提供則切換當前狀態
+     */
+    toggleSoundNotifications(enabled) {
+      const soundEnabled = enabled !== undefined ? enabled : !this.state.system.soundEnabled;
+      this.updateState('system.soundEnabled', soundEnabled);
+      localStorage.setItem('chatSoundEnabled', soundEnabled ? 'true' : 'false');
+    }
+    
+    /**
+     * 設置字體大小
+     * @param {number} size - 字體大小（像素）
+     */
+    setFontSize(size) {
+      this.updateState('system.fontSize', size);
+      localStorage.setItem('chatFontSize', size.toString());
+      document.documentElement.style.setProperty('--chat-font-size', `${size}px`);
+    }
+    
+    /**
+     * 從 localStorage 加載持久化的狀態
+     */
+    loadFromLocalStorage() {
+      // 加載用戶名
+      const savedUsername = localStorage.getItem('chatUsername');
+      if (savedUsername) {
+        this.updateState('user.username', savedUsername);
+      }
+      
+      // 加載夜間模式設置
+      const darkMode = localStorage.getItem('chatDarkMode') === 'true';
+      this.toggleDarkMode(darkMode);
+      
+      // 加載聲音通知設置
+      const soundEnabled = localStorage.getItem('chatSoundEnabled') !== 'false'; // 默認為開啟
+      this.updateState('system.soundEnabled', soundEnabled);
+      
+      // 加載字體大小
+      const fontSize = parseInt(localStorage.getItem('chatFontSize') || '14');
+      this.setFontSize(fontSize);
+    }
+    
+    /**
+     * 將關鍵狀態保存到 localStorage
+     */
+    saveToLocalStorage() {
+      // 保存用戶名
+      localStorage.setItem('chatUsername', this.state.user.username);
+      
+      // 保存夜間模式設置
+      localStorage.setItem('chatDarkMode', this.state.system.darkMode ? 'true' : 'false');
+      
+      // 保存聲音通知設置
+      localStorage.setItem('chatSoundEnabled', this.state.system.soundEnabled ? 'true' : 'false');
+      
+      // 保存字體大小
+      localStorage.setItem('chatFontSize', this.state.system.fontSize.toString());
+    }
+    
+    /**
+     * 重置所有狀態（用於登出或重置應用）
+     */
+    resetState() {
+      // 保留一些系統設置
+      const { darkMode, soundEnabled, fontSize } = this.state.system;
+      
+      // 創建新的狀態對象並重置
+      this.state = {
+        connection: {
+          isConnected: false,
+          isConnecting: false,
+          reconnectAttempts: 0,
+          lastError: null,
+          serverTime: null,
+          ping: null
+        },
+        user: {
+          id: null,
+          username: localStorage.getItem('chatUsername') || '訪客' + Math.floor(Math.random() * 1000),
+          groups: [{ name: 'General', description: '一般討論群組' }],
+          activeGroup: 'General',
+          isTyping: false,
+          status: 'online',
+          lastActivity: new Date()
+        },
+        messages: {
+          byGroup: { 'General': [] },
+          unreadCount: { 'General': 0 },
+          lastMessageTimestamp: { 'General': null },
+          pendingMessages: [],
+          failedMessages: []
+        },
+        system: {
+          darkMode,
+          notificationsEnabled: this.checkNotificationPermission(),
+          soundEnabled,
+          language: navigator.language || 'zh-TW',
+          fontSize,
+          windowFocused: document.hasFocus()
+        }
+      };
+      
+      // 通知所有根監聽器
+      ['connection', 'user', 'messages', 'system'].forEach(key => {
+        this.getListeners(key).forEach(listener => {
+          const value = this.state[key];
+          listener(value, value, key);
+        });
+      });
+    }
+  }
+  
+  // 導出單例實例
+  const chatState = ChatStateManager.getInstance();
