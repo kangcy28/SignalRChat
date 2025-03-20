@@ -93,5 +93,13 @@ namespace SignalRChat.Hubs
         /// </summary>
         /// <param name="errorMessage">錯誤信息</param>
         Task GroupError(string errorMessage);
+
+        /// <summary>
+        /// 用戶正在輸入狀態更新
+        /// </summary>
+        /// <param name="username">用戶名</param>
+        /// <param name="groupName">群組名稱</param>
+        /// <param name="isTyping">是否正在輸入</param>
+        Task UserTyping(string username, string groupName, bool isTyping);
     }
 }

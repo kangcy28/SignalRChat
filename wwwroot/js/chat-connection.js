@@ -292,56 +292,59 @@ class ChatConnection {
      * @returns {Promise<void>} 發送 Promise
      */
     sendMessage(message) {
-      if (!message.trim()) return Promise.resolve();
-      
-      const username = chatState.getState('user.username');
-      const groupName = chatState.getState('user.activeGroup');
-      
-      // 創建消息對象
-      const chatMessage = {
-        user: username,
-        message: message,
-        timestamp: new Date(),
-        groupName: groupName,
-      };
-      
-      // 將消息加入待發送列表
-      chatState.addPendingMessage(chatMessage);
-      
-      try {
-        let invokePromise;
+        if (!message.trim()) return Promise.resolve();
         
-        if (groupName === 'General') {
-          invokePromise = this.invoke('SendMessage', username, message);
-        } else {
-          invokePromise = this.invoke('SendGroupMessage', username, groupName, message);
+        // 從狀態管理器獲取當前活動群組，而不是依賴全局變量
+        const username = chatState.getState('user.username');
+        const groupName = chatState.getState('user.activeGroup');
+        
+        console.log(`正在向群組 ${groupName} 發送消息`); // 添加調試日誌
+        
+        // 創建消息對象
+        const chatMessage = {
+          user: username,
+          message: message,
+          timestamp: new Date(),
+          groupName: groupName,
+        };
+        
+        // 將消息加入待發送列表
+        chatState.addPendingMessage(chatMessage);
+        
+        try {
+          let invokePromise;
+          
+          if (groupName === 'General') {
+            invokePromise = this.invoke('SendMessage', username, message);
+          } else {
+            invokePromise = this.invoke('SendGroupMessage', username, groupName, message);
+          }
+          
+          return invokePromise
+            .then(() => {
+              // 發送成功，從待發送列表中移除
+              chatState.removePendingMessage(chatMessage.timestamp.toString());
+              
+              // 重置用戶正在輸入狀態
+              this.sendTypingStatus(false);
+            })
+            .catch(err => {
+              console.error('發送消息時出錯:', err);
+              
+              // 標記消息為失敗
+              chatState.markMessageAsFailed(chatMessage);
+              
+              throw err;
+            });
+        } catch (err) {
+          console.error('準備發送消息時出錯:', err);
+          
+          // 標記消息為失敗
+          chatState.markMessageAsFailed(chatMessage);
+          
+          return Promise.reject(err);
         }
-        
-        return invokePromise
-          .then(() => {
-            // 發送成功，從待發送列表中移除
-            chatState.removePendingMessage(chatMessage.timestamp.toString());
-            
-            // 重置用戶正在輸入狀態
-            this.sendTypingStatus(false);
-          })
-          .catch(err => {
-            console.error('發送消息時出錯:', err);
-            
-            // 標記消息為失敗
-            chatState.markMessageAsFailed(chatMessage);
-            
-            throw err;
-          });
-      } catch (err) {
-        console.error('準備發送消息時出錯:', err);
-        
-        // 標記消息為失敗
-        chatState.markMessageAsFailed(chatMessage);
-        
-        return Promise.reject(err);
       }
-    }
     
     /**
      * 加入群組

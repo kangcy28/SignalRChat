@@ -76,3 +76,7 @@ desktop.ini
 # 打包輸出目錄
 dist/
 build/
+
+# 編譯後的JavaScript文件 (由TypeScript編譯)
+wwwroot/js/*.js
+wwwroot/js/*.js.map

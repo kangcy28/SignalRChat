@@ -417,53 +417,53 @@ class DOMManager {
         }
       }
   
+
     /**
      * 切換活動群組
      * @param {string} groupName - 群組名稱
      */
     switchActiveGroup(groupName) {
-        // 更新全局變量
-        window.activeGroup = groupName;
-        
-        // 更新當前群組顯示
-        if (this.elements.currentGroupName) {
-          this.elements.currentGroupName.textContent = groupName;
-        }
-        
-        // 更新群組標籤頁高亮
-        document.querySelectorAll('.chat-tab').forEach(tab => {
-          tab.classList.remove('active');
-          if (tab.dataset.group === groupName) {
-            tab.classList.add('active');
-          }
-        });
-        
-        // 更新群組列表項高亮
-        document.querySelectorAll('.groups-list li').forEach(item => {
-          item.classList.remove('active');
-          if (item.dataset.group === groupName) {
-            item.classList.add('active');
-          }
-        });
-        
-        // 更新消息列表顯示
-        document.querySelectorAll('.messages-list').forEach(list => {
-          list.classList.remove('active');
-          if (list.dataset.group === groupName) {
-            list.classList.add('active');
-            // 滾動到底部
-            this.scrollToBottom(list);
-          }
-        });
-        
-        // 重置未讀消息計數
-        this.resetUnreadCount(groupName);
-        
-        // 設置焦點到消息輸入框
-        if (this.elements.messageInput) {
-          this.elements.messageInput.focus();
-        }
+    // 使用狀態管理器更新活動群組，而不是全局變量
+    chatState.setActiveGroup(groupName);
+    
+    // 獲取當前活動群組從狀態管理器
+    const activeGroup = chatState.getState('user.activeGroup');
+    
+    // 更新當前群組顯示
+    if (this.elements.currentGroupName) {
+      this.elements.currentGroupName.textContent = groupName;
+    }
+    
+    // 更新群組標籤頁高亮
+    document.querySelectorAll('.chat-tab').forEach(tab => {
+      tab.classList.remove('active');
+      if (tab.dataset.group === groupName) {
+        tab.classList.add('active');
+        tab.classList.remove('unread'); // 清除未讀標記
       }
+    });
+    
+    // 更新群組列表項高亮
+    document.querySelectorAll('.groups-list li').forEach(item => {
+      item.classList.remove('active');
+      if (item.dataset.group === groupName) {
+        item.classList.add('active');
+      }
+    });
+    
+    // 更新消息列表顯示
+    document.querySelectorAll('.messages-list').forEach(list => {
+      list.classList.remove('active');
+      if (list.dataset.group === groupName) {
+        list.classList.add('active');
+      }
+    });
+    
+    // 設置焦點到消息輸入框
+    if (this.elements.messageInput) {
+      this.elements.messageInput.focus();
+    }
+  }
   
     /**
      * 創建群組標籤頁
@@ -919,6 +919,23 @@ class DOMManager {
           this.elements.failedMessagesModal.classList.remove('show');
         });
       }
+      // 點擊設定對話框背景關閉
+        if (this.elements.settingsModal) {
+            this.elements.settingsModal.addEventListener('click', (event) => {
+            if (event.target === this.elements.settingsModal) {
+                this.elements.settingsModal.classList.remove('show');
+            }
+            });
+        }
+        
+        // 點擊失敗消息對話框背景關閉
+        if (this.elements.failedMessagesModal) {
+            this.elements.failedMessagesModal.addEventListener('click', (event) => {
+            if (event.target === this.elements.failedMessagesModal) {
+                this.elements.failedMessagesModal.classList.remove('show');
+            }
+            });
+        }
     }
   }
   

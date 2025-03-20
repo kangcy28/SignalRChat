@@ -27,11 +27,26 @@ namespace SignalRChat.Hubs
         // 發送消息方法
         public async Task SendMessage(string user, string message)
         {
-            // 記錄用戶名（如果之前沒有註冊過）
+            // 記錄用戶名（只有在首次連接或用戶名變更時）
             string connectionId = Context.ConnectionId;
+            bool shouldUpdateUsersList = false;
+
             if (!ConnectedUsers.ContainsKey(connectionId))
             {
+                // 新用戶連接，添加到字典
                 ConnectedUsers[connectionId] = user;
+                shouldUpdateUsersList = true;
+            }
+            else if (ConnectedUsers[connectionId] != user)
+            {
+                // 用戶名變更，更新字典
+                ConnectedUsers[connectionId] = user;
+                shouldUpdateUsersList = true;
+            }
+
+            // 只有在需要時才通知所有用戶更新用戶列表
+            if (shouldUpdateUsersList)
+            {
                 // 通知所有用戶更新用戶列表
                 await SendConnectedUsersList();
             }
@@ -40,6 +55,34 @@ namespace SignalRChat.Hubs
             await Clients.All.ReceiveMessage(user, message);
         }
 
+        /// <summary>
+        /// 用戶正在輸入狀態
+        /// </summary>
+        /// <param name="username">用戶名</param>
+        /// <param name="groupName">群組名稱</param>
+        /// <param name="isTyping">是否正在輸入</param>
+        public async Task UserTyping(string username, string groupName, bool isTyping)
+        {
+            // 確保用戶在嘗試發送的群組中
+            bool isInGroup = false;
+            string connectionId = Context.ConnectionId;
+
+            if (UserGroups.ContainsKey(connectionId))
+            {
+                isInGroup = UserGroups[connectionId].Contains(groupName);
+            }
+
+            if (isInGroup)
+            {
+                // 向群組中的其他用戶廣播輸入狀態
+                await Clients.OthersInGroup(groupName).UserTyping(username, groupName, isTyping);
+            }
+        }
+        public Task Echo()
+        {
+            // 簡單返回 Task，用於測量連接延遲
+            return Task.CompletedTask;
+        }
         // 發送群組消息方法
         public async Task SendGroupMessage(string user, string groupName, string message)
         {
@@ -180,8 +223,20 @@ namespace SignalRChat.Hubs
             // 通知其他客戶端有新連接
             await Clients.Others.UserConnected(Context.ConnectionId);
 
-            // 自動將用戶加入"General"群組
-            await JoinGroup("General");
+            // 檢查用戶是否已經在 "General" 群組中
+            string connectionId = Context.ConnectionId;
+            bool isInGeneralGroup = false;
+
+            if (UserGroups.ContainsKey(connectionId))
+            {
+                isInGeneralGroup = UserGroups[connectionId].Contains("General");
+            }
+
+            // 如果用戶不在 "General" 群組中，才將其加入
+            if (!isInGeneralGroup)
+            {
+                await JoinGroup("General");
+            }
 
             await base.OnConnectedAsync();
         }
