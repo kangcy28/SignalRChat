@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="zh-tw">
 <head>
-    <!-- 保留原有 head 內容 -->
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>SignalR 聊天室</title>
@@ -16,11 +15,19 @@
             <div class="connection-status">
                 <div id="statusIndicator" class="status-indicator"></div>
                 <span id="connectionStatus">連線狀態: 正在連接...</span>
+                <span class="ms-2" title="連接延遲">
+                    <i class="fas fa-signal"></i> <span id="connectionPing">--</span>
+                </span>
             </div>
+            
+            <!-- 新增: 設置按鈕 -->
+            <button id="settingsBtn" class="btn-icon">
+                <i class="fas fa-cog"></i>
+            </button>
         </div>
 
         <div class="chat-container">
-            <!-- 新增: 群組側邊欄 -->
+            <!-- 群組側邊欄 -->
             <div class="groups-sidebar">
                 <div class="groups-header">
                     <span>聊天群組</span>
@@ -46,14 +53,29 @@
             
             <!-- 聊天窗口 -->
             <div class="chat-window">
-                <!-- 新增: 群組標籤頁 -->
+                <!-- 新增: 連接重試通知 -->
+                <div id="reconnectNotification" class="reconnect-notification" style="display: none;">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    連接中斷，嘗試次數: <span id="retryCount">0</span>
+                    <button id="reconnectBtn" class="btn btn-sm btn-light">
+                        <i class="fas fa-sync"></i> 重新連接
+                    </button>
+                </div>
+                
+                <!-- 新增: 失敗消息通知 -->
+                <div id="failedMessagesBtn" class="failed-messages-notification" style="display: none;">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <span id="failedMessagesCount">0</span> 條消息發送失敗
+                </div>
+                
+                <!-- 群組標籤頁 -->
                 <div class="chat-tabs">
                     <div id="generalTab" class="chat-tab active" data-group="General">General</div>
                     <!-- 動態添加其他群組標籤 -->
                 </div>
                 
                 <div class="messages-container">
-                    <!-- 新增: 每個群組有自己的消息列表 -->
+                    <!-- 每個群組有自己的消息列表 -->
                     <div id="messagesContainer">
                         <ul id="messagesList" class="messages-list active" data-group="General"></ul>
                         <!-- 其他群組的消息列表會動態添加 -->
@@ -67,7 +89,7 @@
                     </div>
                     
                     <div class="message-input-container">
-                        <!-- 新增: 顯示當前活動群組 -->
+                        <!-- 顯示當前活動群組 -->
                         <div class="current-group">
                             <i class="fas fa-users"></i>
                             <span id="currentGroupName">General</span>
@@ -95,7 +117,85 @@
         </div>
     </div>
     
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/6.0.1/signalr.min.js"></script>
+    <!-- 新增: 設置對話框 -->
+    <div id="settingsModal" class="settings-modal">
+        <div class="settings-modal-content">
+            <div class="settings-modal-header">
+                <h5>設置</h5>
+                <button id="closeSettingsBtn" class="btn-close"></button>
+            </div>
+            <div class="settings-modal-body">
+                <div class="settings-section">
+                    <h6>外觀</h6>
+                    <div class="setting-item">
+                        <label for="darkModeToggle">深色模式</label>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="darkModeToggle">
+                        </div>
+                    </div>
+                    <div class="setting-item">
+                        <label for="fontSizeRange">字體大小</label>
+                        <input type="range" class="form-range" min="12" max="20" step="1" id="fontSizeRange">
+                    </div>
+                </div>
+                
+                <div class="settings-section">
+                    <h6>通知</h6>
+                    <div class="setting-item">
+                        <label for="notificationsToggle">推送通知</label>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="notificationsToggle">
+                        </div>
+                    </div>
+                    <div class="setting-item">
+                        <label for="soundToggle">聲音通知</label>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="soundToggle">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="settings-section">
+                    <h6>連接信息</h6>
+                    <div class="setting-item">
+                        <span>連接狀態: </span>
+                        <span id="settingsConnectionStatus">未連接</span>
+                    </div>
+                    <div class="setting-item">
+                        <span>連接延遲: </span>
+                        <span id="settingsPing">--</span>
+                    </div>
+                    <div class="setting-item">
+                        <span>重連嘗試: </span>
+                        <span id="settingsRetryCount">0</span>
+                    </div>
+                    <div class="setting-item">
+                        <button id="settingsReconnectBtn" class="btn btn-sm btn-primary">
+                            <i class="fas fa-sync"></i> 重新連接
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 新增: 失敗消息對話框 -->
+    <div id="failedMessagesModal" class="failed-messages-modal">
+        <div class="failed-messages-modal-content">
+            <div class="failed-messages-modal-header">
+                <h5>發送失敗的消息</h5>
+                <button id="closeFailedMessagesBtn" class="btn-close"></button>
+            </div>
+            <div class="failed-messages-modal-body">
+                <ul id="failedMessagesList" class="failed-messages-list"></ul>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 加載 SignalR 庫 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.12/signalr.min.js"></script>
+    
+    <!-- 加載應用 JavaScript -->
     <script src="js/chat.js"></script>
 </body>
 </html>
