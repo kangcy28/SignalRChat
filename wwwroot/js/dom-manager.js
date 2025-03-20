@@ -89,33 +89,44 @@ class DOMManager {
      * @param {string|null} error - 錯誤信息
      */
     updateConnectionStatus(connected, connecting = false, error = null) {
-      const statusText = this.elements.connectionStatus;
-      const indicator = this.elements.statusIndicator;
-      const sendButton = this.elements.sendButton;
-      const settingsStatus = this.elements.settingsConnectionStatus;
-      const reconnectNotification = this.elements.reconnectNotification;
-      
-      if (connected) {
-        statusText.textContent = "已連接";
-        if (settingsStatus) settingsStatus.textContent = "已連接";
-        indicator.classList.add("status-connected");
-        indicator.classList.remove("status-disconnected", "status-connecting");
-        sendButton.disabled = false;
-        if (reconnectNotification) reconnectNotification.style.display = "none";
-      } else if (connecting) {
-        statusText.textContent = "正在連接...";
-        if (settingsStatus) settingsStatus.textContent = "正在連接...";
-        indicator.classList.add("status-connecting");
-        indicator.classList.remove("status-connected", "status-disconnected");
-        sendButton.disabled = true;
-      } else {
-        statusText.textContent = error ? `連接失敗: ${error}` : "未連接";
-        if (settingsStatus) settingsStatus.textContent = error ? `連接失敗: ${error}` : "未連接";
-        indicator.classList.add("status-disconnected");
-        indicator.classList.remove("status-connected", "status-connecting");
-        sendButton.disabled = true;
+        const statusText = this.elements.connectionStatus;
+        const indicator = this.elements.statusIndicator;
+        const sendButton = this.elements.sendButton;
+        const settingsStatus = this.elements.settingsConnectionStatus;
+        const reconnectNotification = this.elements.reconnectNotification;
+        
+        if (connected) {
+          statusText.textContent = "已連接";
+          if (settingsStatus) settingsStatus.textContent = "已連接";
+          indicator.classList.add("status-connected");
+          indicator.classList.remove("status-disconnected", "status-connecting");
+          sendButton.disabled = false;
+          if (reconnectNotification) reconnectNotification.style.display = "none";
+          
+          // 新增：添加脈動動畫效果
+          indicator.classList.add("pulse-animation");
+        } else if (connecting) {
+          statusText.textContent = "正在連接...";
+          if (settingsStatus) settingsStatus.textContent = "正在連接...";
+          indicator.classList.add("status-connecting");
+          indicator.classList.remove("status-connected", "status-disconnected", "pulse-animation");
+          sendButton.disabled = true;
+          
+          // 新增：顯示連接中動畫
+          indicator.classList.add("connecting-animation");
+        } else {
+          statusText.textContent = error ? `連接失敗: ${error.substring(0, 30)}...` : "未連接";
+          if (settingsStatus) settingsStatus.textContent = error ? `連接失敗` : "未連接";
+          indicator.classList.add("status-disconnected");
+          indicator.classList.remove("status-connected", "status-connecting", "pulse-animation", "connecting-animation");
+          sendButton.disabled = true;
+          
+          // 新增：顯示重連通知，如果有重連嘗試次數
+          if (reconnectNotification && chatState.getState('connection.reconnectAttempts') > 0) {
+            reconnectNotification.style.display = "flex";
+          }
+        }
       }
-    }
   
     /**
      * 更新重連嘗試計數
@@ -147,7 +158,137 @@ class DOMManager {
       if (pingElement) pingElement.textContent = `${ping}ms`;
       if (settingsPing) settingsPing.textContent = `${ping}ms`;
     }
-  
+    scrollToBottom(element) {
+        // 檢查用戶是否已經滾動到底部附近（距離底部不超過100像素）
+        const isScrolledToBottom = element.scrollHeight - element.clientHeight - element.scrollTop < 100;
+        
+        // 如果是，自動滾動到底部
+        if (isScrolledToBottom) {
+          element.scrollTop = element.scrollHeight;
+        } else {
+          // 如果用戶已經滾動到上方，顯示新消息提示
+          this.showNewMessageIndicator(element, groupName);
+        }
+      }
+      resetUnreadCount(groupName) {
+        // 重置群組的未讀消息計數
+        chatState.updateState(`messages.unreadCount.${groupName}`, 0);
+        
+        // 更新UI
+        this.updateGroupTabUnreadCount(groupName);
+        
+        // 更新群組列表中的未讀計數
+        const groupListItem = document.querySelector(`.groups-list li[data-group="${groupName}"]`);
+        if (groupListItem) {
+          const badge = groupListItem.querySelector('.unread-badge');
+          if (badge) {
+            badge.remove();
+          }
+        }
+      }
+      showNewMessageIndicator(messagesContainer, groupName) {
+        // 檢查是否已經存在新消息提示
+        let indicator = messagesContainer.querySelector('.new-messages-indicator');
+        
+        if (!indicator) {
+          indicator = document.createElement('div');
+          indicator.className = 'new-messages-indicator';
+          indicator.innerHTML = '<i class="fas fa-arrow-down"></i> 新訊息';
+          indicator.addEventListener('click', () => {
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            indicator.remove();
+          });
+          messagesContainer.appendChild(indicator);
+        }
+      }
+    showMessage(user, message, groupName, currentUsername) {
+        const messagesList = document.querySelector(`.messages-list[data-group="${groupName}"]`);
+        if (!messagesList) return;
+        
+        const li = document.createElement("li");
+        const isSelf = user === currentUsername;
+        
+        // 設置訊息樣式
+        li.className = isSelf ? "self-message" : "message";
+        
+        // 創建用戶名元素
+        const usernameElement = document.createElement("div");
+        usernameElement.className = "message-username";
+        usernameElement.textContent = isSelf ? "我" : user;
+        
+        // 創建訊息內容元素並處理連結、表情符號等
+        const messageElement = document.createElement("div");
+        messageElement.className = "message-content";
+        
+        // 處理連結
+        const urlRegex = /(https?:\/\/[^\s]+)/g;
+        const processedMessage = message.replace(urlRegex, url => {
+          return `<a href="${url}" target="_blank" rel="noopener noreferrer">${url}</a>`;
+        });
+        
+        messageElement.innerHTML = processedMessage;
+        
+        // 創建時間元素
+        const timeElement = document.createElement("div");
+        timeElement.className = "message-time";
+        const messageTime = new Date();
+        timeElement.textContent = this.formatTime(messageTime);
+        timeElement.title = messageTime.toLocaleString();
+        
+        // 添加元素到列表項
+        li.appendChild(usernameElement);
+        li.appendChild(messageElement);
+        li.appendChild(timeElement);
+        
+        // 添加消息操作菜單
+        if (!isSelf) {
+          // 創建消息操作按鈕
+          const actionBtn = document.createElement("button");
+          actionBtn.className = "message-actions-btn";
+          actionBtn.innerHTML = '<i class="fas fa-ellipsis-v"></i>';
+          actionBtn.title = "訊息操作";
+          
+          // 創建操作菜單
+          const actionsMenu = document.createElement("div");
+          actionsMenu.className = "message-actions-menu";
+          
+          // 添加回覆選項
+          const replyBtn = document.createElement("button");
+          replyBtn.innerHTML = '<i class="fas fa-reply"></i> 回覆';
+          replyBtn.addEventListener("click", () => {
+            const messageInput = this.elements.messageInput;
+            if (messageInput) {
+              messageInput.value = `@${user} `;
+              messageInput.focus();
+            }
+          });
+          
+          actionsMenu.appendChild(replyBtn);
+          li.appendChild(actionBtn);
+          li.appendChild(actionsMenu);
+          
+          // 顯示/隱藏操作菜單
+          actionBtn.addEventListener("click", (event) => {
+            event.stopPropagation();
+            actionsMenu.classList.toggle("show");
+          });
+          
+          // 點擊其他地方關閉菜單
+          document.addEventListener("click", () => {
+            actionsMenu.classList.remove("show");
+          });
+        }
+        
+        messagesList.appendChild(li);
+        
+        // 自動滾動到最新訊息
+        this.scrollToBottom(messagesList);
+        
+        // 如果不是當前活動群組，更新未讀計數
+        if (groupName !== window.activeGroup) {
+          this.updateGroupTabUnreadCount(groupName);
+        }
+      }
     /**
      * 顯示訊息
      * @param {string} user - 用戶名
@@ -223,89 +364,106 @@ class DOMManager {
      * @param {string} currentUsername - 當前用戶名
      */
     updateUserList(users, currentUsername) {
-      const userList = this.elements.userList;
-      const onlineCount = this.elements.onlineCount;
-      
-      if (!userList) return;
-      
-      // 清空現有列表
-      userList.innerHTML = "";
-      
-      // 添加每個用戶到列表
-      users.forEach(user => {
-        const li = document.createElement("li");
+        const userList = this.elements.userList;
+        const onlineCount = this.elements.onlineCount;
         
-        // 創建用戶頭像元素
-        const avatar = document.createElement("div");
-        avatar.className = "user-avatar";
-        avatar.style.backgroundColor = this.stringToColor(user);
-        avatar.textContent = user.charAt(0).toUpperCase();
+        if (!userList) return;
         
-        // 創建用戶名稱元素
-        const username = document.createElement("span");
-        username.textContent = user;
+        // 清空現有列表
+        userList.innerHTML = "";
         
-        // 添加到列表項
-        li.appendChild(avatar);
-        li.appendChild(username);
+        // 排序用戶列表：當前用戶在最上面，其他按字母排序
+        users.sort((a, b) => {
+          if (a === currentUsername) return -1;
+          if (b === currentUsername) return 1;
+          return a.localeCompare(b);
+        });
         
-        // 如果是當前用戶，高亮顯示
-        if (user === currentUsername) {
-          li.style.fontWeight = "bold";
+        // 添加每個用戶到列表
+        users.forEach(user => {
+          const li = document.createElement("li");
+          
+          // 創建用戶頭像元素
+          const avatar = document.createElement("div");
+          avatar.className = "user-avatar";
+          avatar.style.backgroundColor = this.stringToColor(user);
+          avatar.textContent = user.charAt(0).toUpperCase();
+          
+          // 創建用戶狀態指示器
+          const statusIndicator = document.createElement("div");
+          statusIndicator.className = "user-status status-online";
+          avatar.appendChild(statusIndicator);
+          
+          // 創建用戶名稱元素
+          const username = document.createElement("span");
+          username.textContent = user === currentUsername ? `${user} (我)` : user;
+          
+          // 如果是當前用戶，添加特殊樣式
+          if (user === currentUsername) {
+            li.classList.add("current-user");
+            username.style.fontWeight = "bold";
+          }
+          
+          // 添加到列表項
+          li.appendChild(avatar);
+          li.appendChild(username);
+          
+          userList.appendChild(li);
+        });
+        
+        // 更新在線用戶計數
+        if (onlineCount) {
+          onlineCount.textContent = users.length.toString();
         }
-        
-        userList.appendChild(li);
-      });
-      
-      // 更新在線用戶計數
-      if (onlineCount) {
-        onlineCount.textContent = users.length.toString();
       }
-    }
   
     /**
      * 切換活動群組
      * @param {string} groupName - 群組名稱
      */
     switchActiveGroup(groupName) {
-      // 更新全局變量
-      window.activeGroup = groupName;
-      
-      // 更新當前群組顯示
-      if (this.elements.currentGroupName) {
-        this.elements.currentGroupName.textContent = groupName;
+        // 更新全局變量
+        window.activeGroup = groupName;
+        
+        // 更新當前群組顯示
+        if (this.elements.currentGroupName) {
+          this.elements.currentGroupName.textContent = groupName;
+        }
+        
+        // 更新群組標籤頁高亮
+        document.querySelectorAll('.chat-tab').forEach(tab => {
+          tab.classList.remove('active');
+          if (tab.dataset.group === groupName) {
+            tab.classList.add('active');
+          }
+        });
+        
+        // 更新群組列表項高亮
+        document.querySelectorAll('.groups-list li').forEach(item => {
+          item.classList.remove('active');
+          if (item.dataset.group === groupName) {
+            item.classList.add('active');
+          }
+        });
+        
+        // 更新消息列表顯示
+        document.querySelectorAll('.messages-list').forEach(list => {
+          list.classList.remove('active');
+          if (list.dataset.group === groupName) {
+            list.classList.add('active');
+            // 滾動到底部
+            this.scrollToBottom(list);
+          }
+        });
+        
+        // 重置未讀消息計數
+        this.resetUnreadCount(groupName);
+        
+        // 設置焦點到消息輸入框
+        if (this.elements.messageInput) {
+          this.elements.messageInput.focus();
+        }
       }
-      
-      // 更新群組標籤頁高亮
-      document.querySelectorAll('.chat-tab').forEach(tab => {
-        tab.classList.remove('active');
-        if (tab.dataset.group === groupName) {
-          tab.classList.add('active');
-          tab.classList.remove('unread'); // 清除未讀標記
-        }
-      });
-      
-      // 更新群組列表項高亮
-      document.querySelectorAll('.groups-list li').forEach(item => {
-        item.classList.remove('active');
-        if (item.dataset.group === groupName) {
-          item.classList.add('active');
-        }
-      });
-      
-      // 更新消息列表顯示
-      document.querySelectorAll('.messages-list').forEach(list => {
-        list.classList.remove('active');
-        if (list.dataset.group === groupName) {
-          list.classList.add('active');
-        }
-      });
-      
-      // 設置焦點到消息輸入框
-      if (this.elements.messageInput) {
-        this.elements.messageInput.focus();
-      }
-    }
   
     /**
      * 創建群組標籤頁
@@ -314,46 +472,62 @@ class DOMManager {
      * @returns {boolean} - 是否成功創建（如果已存在則返回 false）
      */
     createGroupTab(groupName, onLeaveGroup) {
-      // 檢查標籤頁是否已存在
-      if (document.querySelector(`.chat-tab[data-group="${groupName}"]`)) {
-        return false;
-      }
-      
-      const chatTabs = this.elements.chatTabs;
-      if (!chatTabs) return false;
-      
-      const tab = document.createElement("div");
-      tab.className = "chat-tab";
-      tab.dataset.group = groupName;
-      tab.textContent = groupName;
-      
-      // 添加關閉按鈕 (若非"General"群組)
-      if (groupName !== "General") {
-        const closeBtn = document.createElement("span");
-        closeBtn.className = "close-tab";
-        closeBtn.innerHTML = "&times;";
-        closeBtn.addEventListener("click", (event) => {
-          event.stopPropagation();
-          if (typeof onLeaveGroup === 'function') {
-            onLeaveGroup(groupName);
-          }
+        // 檢查標籤頁是否已存在
+        const existingTab = document.querySelector(`.chat-tab[data-group="${groupName}"]`);
+        if (existingTab) {
+          // 更新未讀消息計數
+          this.updateGroupTabUnreadCount(groupName);
+          return false;
+        }
+        
+        const chatTabs = this.elements.chatTabs;
+        if (!chatTabs) return false;
+        
+        const tab = document.createElement("div");
+        tab.className = "chat-tab";
+        tab.dataset.group = groupName;
+        
+        // 將群組名稱包裝在 span 中，以便添加未讀消息計數
+        const nameSpan = document.createElement("span");
+        nameSpan.textContent = groupName;
+        tab.appendChild(nameSpan);
+        
+        // 添加未讀消息計數
+        const unreadCount = chatState.getState(`messages.unreadCount.${groupName}`) || 0;
+        if (unreadCount > 0) {
+          const badge = document.createElement("span");
+          badge.className = "unread-badge";
+          badge.textContent = unreadCount > 99 ? "99+" : unreadCount.toString();
+          tab.appendChild(badge);
+        }
+        
+        // 添加關閉按鈕 (若非"General"群組)
+        if (groupName !== "General") {
+          const closeBtn = document.createElement("span");
+          closeBtn.className = "close-tab";
+          closeBtn.innerHTML = "&times;";
+          closeBtn.addEventListener("click", (event) => {
+            event.stopPropagation();
+            if (typeof onLeaveGroup === 'function') {
+              onLeaveGroup(groupName);
+            }
+          });
+          
+          tab.appendChild(closeBtn);
+        }
+        
+        // 點擊標籤頁切換群組
+        tab.addEventListener("click", () => {
+          this.switchActiveGroup(groupName);
         });
         
-        tab.appendChild(closeBtn);
+        chatTabs.appendChild(tab);
+        
+        // 創建對應的消息列表
+        this.createGroupMessagesList(groupName);
+        
+        return true;
       }
-      
-      // 點擊標籤頁切換群組
-      tab.addEventListener("click", () => {
-        this.switchActiveGroup(groupName);
-      });
-      
-      chatTabs.appendChild(tab);
-      
-      // 創建對應的消息列表
-      this.createGroupMessagesList(groupName);
-      
-      return true;
-    }
   
     /**
      * 創建群組消息列表
@@ -393,62 +567,94 @@ class DOMManager {
      * @param {Function} onSwitchGroup - 切換群組的回調函數
      */
     updateUserGroupsList(groups, activeGroup, onLeaveGroup, onSwitchGroup) {
-      const userGroupsList = this.elements.userGroupsList;
-      if (!userGroupsList) return;
-      
-      userGroupsList.innerHTML = "";
-      
-      groups.forEach(group => {
-        const li = document.createElement("li");
-        li.dataset.group = group.name;
+        const userGroupsList = this.elements.userGroupsList;
+        if (!userGroupsList) return;
         
-        // 如果是當前活動群組，添加.active類
-        if (group.name === activeGroup) {
-          li.classList.add("active");
-        }
+        userGroupsList.innerHTML = "";
         
-        // 群組名稱
-        const groupName = document.createElement("div");
-        groupName.className = "group-name";
-        groupName.innerHTML = `<i class="fas fa-users"></i> ${group.name}`;
-        
-        // 群組操作按鈕
-        const groupActions = document.createElement("div");
-        groupActions.className = "group-actions";
-        
-        // 離開群組按鈕 (一般群組不能離開)
-        if (group.name !== "General") {
-          const leaveBtn = document.createElement("button");
-          leaveBtn.innerHTML = `<i class="fas fa-sign-out-alt"></i>`;
-          leaveBtn.title = "離開群組";
+        groups.forEach(group => {
+          const li = document.createElement("li");
+          li.dataset.group = group.name;
           
-          leaveBtn.addEventListener("click", (event) => {
-            event.stopPropagation();
-            if (typeof onLeaveGroup === 'function') {
-              onLeaveGroup(group.name);
+          // 如果是當前活動群組，添加.active類
+          if (group.name === activeGroup) {
+            li.classList.add("active");
+          }
+          
+          // 群組名稱
+          const groupName = document.createElement("div");
+          groupName.className = "group-name";
+          groupName.innerHTML = `<i class="fas fa-users"></i> ${group.name}`;
+          
+          // 添加未讀消息計數
+          const unreadCount = chatState.getState(`messages.unreadCount.${group.name}`) || 0;
+          if (unreadCount > 0 && group.name !== activeGroup) {
+            const badge = document.createElement("span");
+            badge.className = "unread-badge";
+            badge.textContent = unreadCount > 99 ? "99+" : unreadCount.toString();
+            groupName.appendChild(badge);
+          }
+          
+          // 群組操作按鈕
+          const groupActions = document.createElement("div");
+          groupActions.className = "group-actions";
+          
+          // 離開群組按鈕 (一般群組不能離開)
+          if (group.name !== "General") {
+            const leaveBtn = document.createElement("button");
+            leaveBtn.innerHTML = `<i class="fas fa-sign-out-alt"></i>`;
+            leaveBtn.title = "離開群組";
+            
+            leaveBtn.addEventListener("click", (event) => {
+              event.stopPropagation();
+              if (typeof onLeaveGroup === 'function') {
+                // 添加確認對話框
+                if (confirm(`確定要離開 ${group.name} 群組嗎？`)) {
+                  onLeaveGroup(group.name);
+                }
+              }
+            });
+            
+            groupActions.appendChild(leaveBtn);
+          }
+          
+          li.appendChild(groupName);
+          li.appendChild(groupActions);
+          
+          // 點擊群組列表項切換到該群組
+          li.addEventListener("click", () => {
+            if (typeof onSwitchGroup === 'function') {
+              onSwitchGroup(group.name);
             }
           });
           
-          groupActions.appendChild(leaveBtn);
+          userGroupsList.appendChild(li);
+          
+          // 確保該群組有對應的標籤頁和消息列表
+          this.createGroupTab(group.name, onLeaveGroup);
+        });
+      }
+      updateGroupTabUnreadCount(groupName) {
+        const groupTab = document.querySelector(`.chat-tab[data-group="${groupName}"]`);
+        if (!groupTab) return;
+        
+        // 移除現有的未讀徽章
+        const existingBadge = groupTab.querySelector('.unread-badge');
+        if (existingBadge) {
+          existingBadge.remove();
         }
         
-        li.appendChild(groupName);
-        li.appendChild(groupActions);
-        
-        // 點擊群組列表項切換到該群組
-        li.addEventListener("click", () => {
-          if (typeof onSwitchGroup === 'function') {
-            onSwitchGroup(group.name);
+        // 如果不是當前活動群組，添加未讀計數徽章
+        if (groupName !== window.activeGroup) {
+          const unreadCount = chatState.getState(`messages.unreadCount.${groupName}`) || 0;
+          if (unreadCount > 0) {
+            const badge = document.createElement("span");
+            badge.className = "unread-badge";
+            badge.textContent = unreadCount > 99 ? "99+" : unreadCount.toString();
+            groupTab.appendChild(badge);
           }
-        });
-        
-        userGroupsList.appendChild(li);
-        
-        // 確保該群組有對應的標籤頁和消息列表
-        this.createGroupTab(group.name, onLeaveGroup);
-      });
-    }
-  
+        }
+      }
     /**
      * 更新可用群組列表
      * @param {Array<Object>} groups - 可用群組列表
@@ -519,7 +725,7 @@ class DOMManager {
         availableGroupsList.appendChild(li);
       });
     }
-  
+    
     /**
      * 顯示群組對話框
      */

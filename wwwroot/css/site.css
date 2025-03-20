@@ -1884,3 +1884,130 @@
   background-color: #2d1b1b;
   border-color: #3d2929;
 }
+/* 連接狀態指示器動畫 */
+.pulse-animation {
+  animation: pulse 2s infinite;
+}
+
+.connecting-animation {
+  animation: blink 1.5s infinite;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
+}
+/* 用戶列表樣式增強 */
+#userList li.current-user {
+  background-color: rgba(79, 70, 229, 0.1);
+  border-left: 3px solid var(--primary-color);
+}
+
+.user-avatar {
+  position: relative;
+}
+
+.user-status {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 2px solid white;
+}
+/* 未讀消息徽章 */
+.unread-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--danger-color);
+  color: white;
+  font-size: 0.7rem;
+  border-radius: 50%;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  margin-left: 8px;
+}
+
+/* 消息操作菜單 */
+.message-actions-btn {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  background: none;
+  border: none;
+  color: #94a3b8;
+  font-size: 0.8rem;
+  opacity: 0;
+  transition: opacity 0.2s;
+  cursor: pointer;
+}
+
+.message:hover .message-actions-btn {
+  opacity: 1;
+}
+
+.message-actions-menu {
+  position: absolute;
+  top: 25px;
+  right: 5px;
+  background-color: white;
+  border-radius: 0.25rem;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  display: none;
+  z-index: 10;
+}
+
+.message-actions-menu.show {
+  display: block;
+  animation: fadeIn 0.2s;
+}
+
+.message-actions-menu button {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 0.5rem 1rem;
+  border: none;
+  background: none;
+  color: var(--dark-color);
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.message-actions-menu button:hover {
+  background-color: #f1f5f9;
+}
+
+/* 新消息提示指示器 */
+.new-messages-indicator {
+  position: absolute;
+  bottom: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: var(--primary-color);
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 2rem;
+  font-size: 0.9rem;
+  cursor: pointer;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  z-index: 5;
+  animation: bounceIn 0.5s;
+}
+
+.new-messages-indicator:hover {
+  background-color: var(--primary-dark);
+}
+
+/* 優化消息樣式 */
+.message-content a {
+  color: var(--primary-color);
+  text-decoration: none;
+}
+
+.message-content a:hover {
+  text-decoration: underline;
+}
