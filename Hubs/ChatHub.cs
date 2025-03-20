@@ -5,15 +5,18 @@ using System.Threading.Tasks;
 
 namespace SignalRChat.Hubs
 {
-    public class ChatHub : Hub
+    /// <summary>
+    /// 聊天Hub，實現強類型IChatHub接口
+    /// </summary>
+    public class ChatHub : Hub<IChatClient>, IChatHub
     {
         // 靜態字典，存儲當前連接的用戶：ConnectionId -> 用戶名
         private static readonly Dictionary<string, string> ConnectedUsers = new Dictionary<string, string>();
 
-        // 新增: 用戶所屬群組的字典：ConnectionId -> List<GroupName>
+        // 用戶所屬群組的字典：ConnectionId -> List<GroupName>
         private static readonly Dictionary<string, List<string>> UserGroups = new Dictionary<string, List<string>>();
 
-        // 新增: 群組描述字典：GroupName -> Description
+        // 群組描述字典：GroupName -> Description
         private static readonly Dictionary<string, string> GroupDescriptions = new Dictionary<string, string>
         {
             { "General", "一般討論群組" },
@@ -33,10 +36,11 @@ namespace SignalRChat.Hubs
                 await SendConnectedUsersList();
             }
 
-            await Clients.All.SendAsync("ReceiveMessage", user, message);
+            // 使用強類型調用客戶端方法
+            await Clients.All.ReceiveMessage(user, message);
         }
 
-        // 新增: 發送群組消息方法
+        // 發送群組消息方法
         public async Task SendGroupMessage(string user, string groupName, string message)
         {
             string connectionId = Context.ConnectionId;
@@ -50,17 +54,17 @@ namespace SignalRChat.Hubs
 
             if (isInGroup)
             {
-                // 發送消息給群組成員
-                await Clients.Group(groupName).SendAsync("ReceiveGroupMessage", user, groupName, message);
+                // 使用強類型調用客戶端方法
+                await Clients.Group(groupName).ReceiveGroupMessage(user, groupName, message);
             }
             else
             {
                 // 通知用戶他不在群組中
-                await Clients.Caller.SendAsync("GroupError", $"您不是群組 '{groupName}' 的成員，無法發送消息。");
+                await Clients.Caller.GroupError($"您不是群組 '{groupName}' 的成員，無法發送消息。");
             }
         }
 
-        // 新增: 加入群組方法
+        // 加入群組方法
         public async Task JoinGroup(string groupName)
         {
             string connectionId = Context.ConnectionId;
@@ -81,16 +85,16 @@ namespace SignalRChat.Hubs
             }
 
             // 通知用戶成功加入群組
-            await Clients.Caller.SendAsync("JoinedGroup", groupName);
+            await Clients.Caller.JoinedGroup(groupName);
 
             // 通知群組其他成員有新用戶加入
-            await Clients.Group(groupName).SendAsync("UserJoinedGroup", username, groupName);
+            await Clients.Group(groupName).UserJoinedGroup(username, groupName);
 
             // 發送更新後的群組列表給用戶
             await SendUserGroupsList(connectionId);
         }
 
-        // 新增: 離開群組方法
+        // 離開群組方法
         public async Task LeaveGroup(string groupName)
         {
             string connectionId = Context.ConnectionId;
@@ -106,16 +110,16 @@ namespace SignalRChat.Hubs
             }
 
             // 通知用戶成功離開群組
-            await Clients.Caller.SendAsync("LeftGroup", groupName);
+            await Clients.Caller.LeftGroup(groupName);
 
             // 通知群組其他成員有用戶離開
-            await Clients.Group(groupName).SendAsync("UserLeftGroup", username, groupName);
+            await Clients.Group(groupName).UserLeftGroup(username, groupName);
 
             // 發送更新後的群組列表給用戶
             await SendUserGroupsList(connectionId);
         }
 
-        // 新增: 獲取可用群組列表方法
+        // 獲取可用群組列表方法
         public async Task GetAvailableGroups()
         {
             List<object> groups = new List<object>();
@@ -130,7 +134,7 @@ namespace SignalRChat.Hubs
                 });
             }
 
-            await Clients.Caller.SendAsync("AvailableGroups", groups);
+            await Clients.Caller.AvailableGroups(groups);
         }
 
         // 註冊用戶名方法
@@ -152,16 +156,16 @@ namespace SignalRChat.Hubs
             }
 
             // 廣播用戶連接訊息（使用用戶名而非 connectionId）
-            await Clients.Others.SendAsync("UserConnected", username);
+            await Clients.Others.UserConnected(username);
 
-            // 新增: 如果用戶名變更了，更新所有群組中的顯示
+            // 如果用戶名變更了，更新所有群組中的顯示
             if (oldUsername != null && oldUsername != username)
             {
                 if (UserGroups.ContainsKey(connectionId))
                 {
                     foreach (var group in UserGroups[connectionId])
                     {
-                        await Clients.Group(group).SendAsync("UserRenamedInGroup", oldUsername, username, group);
+                        await Clients.Group(group).UserRenamedInGroup(oldUsername, username, group);
                     }
                 }
             }
@@ -173,12 +177,10 @@ namespace SignalRChat.Hubs
         // 當用戶連接時
         public override async Task OnConnectedAsync()
         {
-            // 不在這裡添加用戶到字典，等待用戶主動註冊用戶名
-
             // 通知其他客戶端有新連接
-            await Clients.Others.SendAsync("UserConnected", Context.ConnectionId);
+            await Clients.Others.UserConnected(Context.ConnectionId);
 
-            // 新增: 自動將用戶加入"General"群組
+            // 自動將用戶加入"General"群組
             await JoinGroup("General");
 
             await base.OnConnectedAsync();
@@ -199,14 +201,14 @@ namespace SignalRChat.Hubs
                 }
             }
 
-            // 新增: 當用戶斷開時，從所有群組中移除
+            // 當用戶斷開時，從所有群組中移除
             if (UserGroups.ContainsKey(connectionId))
             {
                 List<string> userGroupsCopy = new List<string>(UserGroups[connectionId]);
                 foreach (var group in userGroupsCopy)
                 {
                     // 通知群組其他成員有用戶離開
-                    await Clients.Group(group).SendAsync("UserLeftGroup", username ?? connectionId, group);
+                    await Clients.Group(group).UserLeftGroup(username ?? connectionId, group);
                 }
 
                 UserGroups.Remove(connectionId);
@@ -215,11 +217,11 @@ namespace SignalRChat.Hubs
             // 通知其他客戶端有用戶斷開連接
             if (username != null)
             {
-                await Clients.Others.SendAsync("UserDisconnected", username);
+                await Clients.Others.UserDisconnected(username);
             }
             else
             {
-                await Clients.Others.SendAsync("UserDisconnected", connectionId);
+                await Clients.Others.UserDisconnected(connectionId);
             }
 
             // 更新用戶列表
@@ -238,10 +240,10 @@ namespace SignalRChat.Hubs
                 usernames.AddRange(ConnectedUsers.Values);
             }
 
-            await Clients.All.SendAsync("UpdateUserList", usernames);
+            await Clients.All.UpdateUserList(usernames);
         }
 
-        // 新增: 輔助方法：發送用戶的群組列表
+        // 輔助方法：發送用戶的群組列表
         private async Task SendUserGroupsList(string connectionId)
         {
             if (UserGroups.ContainsKey(connectionId))
@@ -257,11 +259,11 @@ namespace SignalRChat.Hubs
                     });
                 }
 
-                await Clients.Client(connectionId).SendAsync("UpdateUserGroups", groups);
+                await Clients.Client(connectionId).UpdateUserGroups(groups);
             }
         }
 
-        // 新增: 輔助方法：檢查用戶是否在特定群組中
+        // 輔助方法：檢查用戶是否在特定群組中
         private bool IsUserInGroup(string connectionId, string groupName)
         {
             if (UserGroups.ContainsKey(connectionId))

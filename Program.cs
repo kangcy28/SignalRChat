@@ -1,4 +1,5 @@
 using SignalRChat.Hubs;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -17,6 +18,7 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseRouting();
 
+// 使用強類型Hub
 app.MapHub<ChatHub>("/chatHub");
 app.MapGet("/", () => Results.Redirect("/index.html"));
 
