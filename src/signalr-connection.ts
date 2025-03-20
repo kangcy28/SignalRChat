@@ -214,7 +214,7 @@ export class ChatHubConnection {
     
     // 替代方案：使用 echo 消息來測量延遲
     // 發送一個空的 echo 消息並計算時間差
-    this.connection.invoke('Echo')
+    this.connection.invoke('ping')
       .then(() => {
         if (this.pingStartTime !== null) {
           const pingTime = Date.now() - this.pingStartTime;

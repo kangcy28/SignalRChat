@@ -220,7 +220,7 @@ class ChatConnection {
       this.pingStartTime = Date.now();
       
       // 發送 ping
-      this.connection.invoke('Echo')
+      this.connection.invoke('ping')
         .then(() => {
           if (this.pingStartTime !== null) {
             const pingTime = Date.now() - this.pingStartTime;
@@ -412,7 +412,7 @@ class ChatConnection {
       // 向服務器發送狀態（如果服務器支持）
       if (chatState.getState('connection.isConnected')) {
         try {
-          this.connection.invoke('UserTyping', 
+          this.connection.invoke('userTyping', 
             chatState.getState('user.username'), 
             chatState.getState('user.activeGroup'), 
             isTyping)
