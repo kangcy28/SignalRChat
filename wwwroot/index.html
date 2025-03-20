@@ -70,7 +70,7 @@
                 
                 <!-- 群組標籤頁 -->
                 <div class="chat-tabs">
-                    <div id="generalTab" class="chat-tab active" data-group="General">General</div>
+                    <div id="generalTab" class="chat-tab active" data-group="General" onclick="switchToGeneral()">General</div>
                     <!-- 動態添加其他群組標籤 -->
                 </div>
                 
@@ -202,3 +202,49 @@
     <script src="js/chat.js"></script>
 </body>
 </html>
+
+<script>
+    // 全局函數，用於切換到 General 群組
+    function switchToGeneral() {
+      console.log('通過 HTML onclick 切換到 General 群組');
+      
+      // 如果 uiManager 已初始化，使用它
+      if (typeof chatUIManager !== 'undefined') {
+        chatUIManager.switchActiveGroup('General');
+        return;
+      }
+      
+      // 否則直接操作 DOM
+      // 更新全局變量
+      window.activeGroup = 'General';
+      
+      // 更新顯示的群組名稱
+      const currentGroupName = document.getElementById('currentGroupName');
+      if (currentGroupName) {
+        currentGroupName.textContent = 'General';
+      }
+      
+      // 更新標籤高亮
+      document.querySelectorAll('.chat-tab').forEach(tab => {
+        tab.classList.remove('active');
+        if (tab.getAttribute('data-group') === 'General') {
+          tab.classList.add('active');
+          tab.classList.remove('unread');
+        }
+      });
+      
+      // 更新消息列表
+      document.querySelectorAll('.messages-list').forEach(list => {
+        list.classList.remove('active');
+        if (list.getAttribute('data-group') === 'General') {
+          list.classList.add('active');
+        }
+      });
+      
+      // 設置焦點到消息輸入框
+      const messageInput = document.getElementById('messageInput');
+      if (messageInput) {
+        messageInput.focus();
+      }
+    }
+    </script>

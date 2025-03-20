@@ -220,7 +220,7 @@ class ChatConnection {
       this.pingStartTime = Date.now();
       
       // 發送 ping
-      this.connection.invoke('Ping')
+      this.connection.invoke('Echo')
         .then(() => {
           if (this.pingStartTime !== null) {
             const pingTime = Date.now() - this.pingStartTime;

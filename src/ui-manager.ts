@@ -51,12 +51,13 @@ export class ChatUIManager {
           this.domElements[key] = document.createElement('div');
         }
       });
-
+      
     // 綁定事件處理
     this.bindEventHandlers();
 
     // 設置SignalR客戶端方法處理
     this.setupSignalREvents();
+
 
     // 啟動連接
     try {
@@ -87,6 +88,7 @@ export class ChatUIManager {
       console.error('初始化聊天失敗:', err);
     }
   }
+  
 
   /**
    * 綁定UI事件處理
@@ -235,7 +237,7 @@ export class ChatUIManager {
       alert(errorMessage);
     });
   }
-
+  
   /**
    * 發送消息
    */
